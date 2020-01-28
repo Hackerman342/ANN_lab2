@@ -20,11 +20,12 @@ from RBF_functions import RadialBasisFunctions
 if __name__ == "__main__":
     
     # Initialize class w/ node count
-    rbf = RadialBasisFunctions(20)
+    rbf = RadialBasisFunctions(25)
     # Set parameters for RBF
     mu_range = [0, 5]
     std = 1
-    rbf.lr = .001   
+    rbf.lr = .01
+    epochs = 1000
     
     # Set which input function to approximate
     sin_or_square = 'sin'
@@ -45,10 +46,10 @@ if __name__ == "__main__":
     x_test, sin_test, square_test = rbf.generate_sin_and_square(test_range,step)
     
     # Add zero mean, low variance noise to data
-#    sin_train = rbf.add_gauss_noise(sin_train, 0, 0.1)
-#    square_train = rbf.add_gauss_noise(square_train, 0, 0.1)
-#    sin_test = rbf.add_gauss_noise(sin_test, 0, 0.1)
-#    square_test = rbf.add_gauss_noise(square_test, 0, 0.1)
+    sin_train = rbf.add_gauss_noise(sin_train, 0, 0.1)
+    square_train = rbf.add_gauss_noise(square_train, 0, 0.1)
+    sin_test = rbf.add_gauss_noise(sin_test, 0, 0.1)
+    square_test = rbf.add_gauss_noise(square_test, 0, 0.1)
 
     
     if sin_or_square == 'sin':
@@ -76,38 +77,37 @@ if __name__ == "__main__":
         w = np.random.randn(rbf.node_count).reshape(-1,1)
         # Empty arrays to store phi values
         phi_train = np.zeros((rbf.node_count,f_train.size))
-        for j in range(10):
-            for i in range(len(x_train)): # For all points
+        phi_test = np.zeros((rbf.node_count,f_train.size))
+        for i in range(epochs):
+            for j in range(len(x_train)): # For all points
                 # Call delta rule function
-                dw, phi_k = rbf.delta_rule(x_train[i], f_train[i], w, mu_vec, std_vec)
+                dw, phi_k = rbf.delta_rule(x_train[j], f_train[j], w, mu_vec, std_vec)
                 # Update weights
                 w += dw
-                # Store phi values for all x
-                phi_train[:,i] = phi_k.reshape(-1,)
-        print(w)
-        fhat_train = np.dot(phi_train.T, w)
-        
-        
+                if i == epochs - 1:
+                    # Store phi values for all x
+                    phi_train[:,j] = phi_k.reshape(-1,)
+                    _, phi_k_test = rbf.delta_rule(x_test[j], f_test[j], w, mu_vec, std_vec)
+                    phi_test[:,j] = phi_k_test.reshape(-1,)
 
-        
-    
-    
+        fhat_train = np.dot(phi_train.T, w)
+        fhat_test = np.dot(phi_test.T, w)
     
     
     ARE_train = rbf.ARE(f_train, fhat_train)
-#    ARE_test = rbf.ARE(f_test, fhat_test)
-#    
+    ARE_test = rbf.ARE(f_test, fhat_test)
+    
     print("Training ARE: ", ARE_train)
     print("Training visual fit")
     plt.plot(x_train,f_train)
     plt.plot(x_train,fhat_train)
     plt.show()
-#
-#    print("Testing ARE: ", ARE_test)
-#    print("Testing visual fit")
-#    plt.plot(x_test,f_test)
-#    plt.plot(x_test,fhat_test)
-#    plt.show()
+
+    print("Testing ARE: ", ARE_test)
+    print("Testing visual fit")
+    plt.plot(x_test,f_test)
+    plt.plot(x_test,fhat_test)
+    plt.show()
     
     
         

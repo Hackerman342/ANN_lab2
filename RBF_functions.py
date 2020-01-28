@@ -20,7 +20,7 @@ class RadialBasisFunctions():
     def __init__(self, node_count):
         # Initilize class variables
         self.node_count = node_count
-        self.lr = .001
+        self.lr = .01
     
     # Generates a sin wave and square wave over specified interval
     def generate_sin_and_square(self, xrange, step):
@@ -65,7 +65,7 @@ class RadialBasisFunctions():
         # Calculate transfer function (column vector)
         phi = self.gauss_transfer_function(x, mu_vec.reshape(-1,1), std_vec.reshape(-1,1))
         # Calculate weight updates (column vector)
-        dw = -1*self.lr*(f - np.dot(phi.T,w))*phi
+        dw = self.lr*(f - np.dot(phi.T,w))*phi
         return dw, phi
         
     ##### Support functions ######
