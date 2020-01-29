@@ -15,23 +15,22 @@ from mpl_toolkits import mplot3d
 # Import necessary classes from script with functions
 from RBF_functions import RadialBasisFunctions
 
-
+N_HIDDEN_NODES = 11
 
 if __name__ == "__main__":
     
     # Initialize class w/ node count
-    rbf = RadialBasisFunctions(63)
+    rbf = RadialBasisFunctions(N_HIDDEN_NODES)
             
     # Set parameters for RBF
     mu_range = [0, round(2*math.pi,1)]
     std = 1
 
     # Set which input function to approximate
-    #sin_or_square = 'sin'
-    sin_or_square = 'square'
+    sin_or_square = 'sin'
+    #sin_or_square = 'square'
     
     # Boolean for whether or not to use random standard deviations
-    rand_std = True
     rand_std = False 
     
     # Set parameters for data
@@ -79,7 +78,10 @@ if __name__ == "__main__":
 
     print("Testing ARE: ", ARE_test)
     print("Testing visual fit")
-    plt.plot(x_test,f_test)
-    plt.plot(x_test,fhat_test)
+    plt.plot(x_test,f_test,'k',label='Real')
+    plt.plot(x_test,fhat_test, '--c', label='Predicted')
+    title = str(N_HIDDEN_NODES) + " hidden nodes"
+    plt.title(title)
+    plt.legend()
     plt.show()
 
