@@ -15,13 +15,12 @@ from mpl_toolkits import mplot3d
 # Import necessary classes from script with functions
 from RBF_functions import RadialBasisFunctions
 
-###### STILL NEED TO ADD COMPETITIVE LEARNING ########
-###### THIS IS (PRETTY MUCH) JUST A COPY OF 3_2_main CURRENTLY ########
+
 
 if __name__ == "__main__":
     
     # Initialize class w/ node count
-    rbf = RadialBasisFunctions(100)
+    rbf = RadialBasisFunctions(10)
     # Set parameters for RBF
     mu_range = [0, round(2*math.pi,1)]
     std = 1
@@ -30,11 +29,11 @@ if __name__ == "__main__":
     
     # Set which input function to approximate
     sin_or_square = 'sin'
-    #sin_or_square = 'square'
+    sin_or_square = 'square'
     
     # Boolean for whether or not to use random standard deviations
     rand_std = True
-    rand_std = False
+    #rand_std = False    
     
     # Boolean for whether or not to add gaussian noise
     add_noise = True
@@ -44,10 +43,12 @@ if __name__ == "__main__":
     train_range = [0 , 2*math.pi]
     test_range = [0.05 , 2*math.pi + 0.05]
     step = 0.1
+
     
     # Call functions to generate train and test dataseta
     x_train, sin_train, square_train = rbf.generate_sin_and_square(train_range,step)
     x_test, sin_test, square_test = rbf.generate_sin_and_square(test_range,step)
+
     
     if add_noise:
         # Add zero mean, low variance noise to data
@@ -64,9 +65,17 @@ if __name__ == "__main__":
         f_train = square_train
         f_test = square_test
         
-
+    # Build equally spaced mu_vec to initialize
     mu_vec = np.linspace(mu_range[0], mu_range[1],rbf.node_count)
+    #mu_vec = np.array([-1.,2.,3.,-4.,5.,6.8,7.8,8.2,9.,0.])
+    print(mu_vec)    
+    # Optimize mu_vec centers with competitive learning
+    rand_ids = np.random.permutation(x_train.size)     
+    for j in rand_ids:
+        mu_vec =  rbf.competitive_learning_1D(x_train[j], mu_vec)
+    print(mu_vec)    
 
+        
     if rand_std:    
         std_vec = std*np.random.rand(rbf.node_count)
     else:
@@ -78,14 +87,16 @@ if __name__ == "__main__":
     
     # initialize random weights as column
     w = np.random.randn(rbf.node_count).reshape(-1,1)
+    # Choose random order of points for weight update 
+    rand_ids = np.random.permutation(x_train.size)     
     # Initialize vectors for storing errors
     ARE_train = np.zeros((1,epochs)).flatten()
     ARE_test = np.zeros((1,epochs)).flatten()
     # Iteratively call delta rule function and update weights
     for i in range(epochs):
-        for j in range(len(x_train)):
+        for j in rand_ids:
             w += rbf.delta_rule(x_train[j], f_train[j], w, phi_train[j,:])
-        # Flatten w to 1-D for dot product
+        # Flatten w to 1-D for dot product - just used for ARE trend/plot
         w_temp = w.flatten()
         # Calculate predicted outputs
         fhat_train = np.dot(phi_train, w_temp)
@@ -93,7 +104,6 @@ if __name__ == "__main__":
         # Measure absolute residual error
         ARE_train[i] = rbf.ARE(f_train, fhat_train)
         ARE_test[i] = rbf.ARE(f_test, fhat_test)
-    
     # Show ARE trend
     plt.plot(ARE_train, label = "Training ARE")
     plt.plot(ARE_test, label = "Testing ARE")
@@ -114,6 +124,7 @@ if __name__ == "__main__":
     print("Training visual fit")
     plt.plot(x_train,f_train)
     plt.plot(x_train,fhat_train)
+    plt.scatter(mu_vec,np.zeros(mu_vec.shape))
     plt.show()
 
     print("Testing ARE: ", ARE_test)

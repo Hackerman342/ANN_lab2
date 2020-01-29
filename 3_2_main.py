@@ -23,17 +23,17 @@ if __name__ == "__main__":
     rbf = RadialBasisFunctions(100)
     # Set parameters for RBF
     mu_range = [0, round(2*math.pi,1)]
-    std = 1
+    std = .2
     rbf.lr = .01
     epochs = 100
     
     # Set which input function to approximate
     sin_or_square = 'sin'
-    #sin_or_square = 'square'
+    sin_or_square = 'square'
     
     # Set which input function to approximate
     ls_or_delta = 'ls'
-    ls_or_delta = 'delta'
+    #ls_or_delta = 'delta'
     
     # Boolean for whether or not to use random standard deviations
     rand_std = True
@@ -54,11 +54,6 @@ if __name__ == "__main__":
     x_test, sin_test, square_test = rbf.generate_sin_and_square(test_range,step)
 
     
-    
-    # Shuffle data
-    #x_train, sin_train, square_train = rbf.shuffle_data(x_train, sin_train, square_train)
-    #x_test, sin_test, square_test = rbf.shuffle_data(x_test, sin_test, square_test)
-    
     if add_noise:
         # Add zero mean, low variance noise to data
         sin_train = rbf.add_gauss_noise(sin_train, 0, 0.1)
@@ -76,7 +71,7 @@ if __name__ == "__main__":
         
 
     mu_vec = np.linspace(mu_range[0], mu_range[1],rbf.node_count)
-
+        
     if rand_std:    
         std_vec = std*np.random.rand(rbf.node_count)
     else:
@@ -93,14 +88,16 @@ if __name__ == "__main__":
     elif ls_or_delta == 'delta':
         # initialize random weights as column
         w = np.random.randn(rbf.node_count).reshape(-1,1)
+        # Choose random order of points for weight update 
+        rand_ids = np.random.permutation(x_train.size)     
         # Initialize vectors for storing errors
         ARE_train = np.zeros((1,epochs)).flatten()
         ARE_test = np.zeros((1,epochs)).flatten()
         # Iteratively call delta rule function and update weights
         for i in range(epochs):
-            for j in range(len(x_train)):
+            for j in rand_ids:
                 w += rbf.delta_rule(x_train[j], f_train[j], w, phi_train[j,:])
-            # Flatten w to 1-D for dot product
+            # Flatten w to 1-D for dot product - just used for ARE trend/plot
             w_temp = w.flatten()
             # Calculate predicted outputs
             fhat_train = np.dot(phi_train, w_temp)
