@@ -20,15 +20,19 @@ from RBF_functions import RadialBasisFunctions
 if __name__ == "__main__":
     
     # Initialize class w/ node count
-    rbf = RadialBasisFunctions(10000)
+    rbf = RadialBasisFunctions(63)
             
     # Set parameters for RBF
-    mu_range = [-5, 5]
+    mu_range = [0, round(2*math.pi,1)]
     std = 1
 
     # Set which input function to approximate
     #sin_or_square = 'sin'
     sin_or_square = 'square'
+    
+    # Boolean for whether or not to use random standard deviations
+    rand_std = True
+    rand_std = False 
     
     # Set parameters for data
     train_range = [0 , 2*math.pi]
@@ -49,9 +53,10 @@ if __name__ == "__main__":
         
 
     mu_vec = np.linspace(mu_range[0], mu_range[1],rbf.node_count)
-    #std_vec = std*np.ones((1,rbf.node_count))    
-    std_vec = std*np.random.rand(rbf.node_count)
-    #std_vec = np.linspace(.2,std,rbf.node_count)
+    if rand_std:    
+        std_vec = std*np.random.rand(rbf.node_count)
+    else:
+        std_vec = std*np.ones((1,rbf.node_count))
     
      
     # Build phi arrays

@@ -23,7 +23,7 @@ if __name__ == "__main__":
     # Initialize class w/ node count
     rbf = RadialBasisFunctions(100)
     # Set parameters for RBF
-    mu_range = [0, 5]
+    mu_range = [0, round(2*math.pi,1)]
     std = 1
     rbf.lr = .01
     epochs = 100

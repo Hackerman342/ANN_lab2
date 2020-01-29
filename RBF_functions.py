@@ -65,6 +65,19 @@ class RadialBasisFunctions():
         
     ##### Support functions ######
     
+    
+    # Shuffle data for delta learning
+    def shuffle_data(self, x, y1, y2):
+        #
+        # Ensure proper shape of x, y1, & y2 is 1xN
+        x = x.reshape(-1)
+        y1 = y1.reshape(-1)
+        y2 = y2.reshape(-1)
+        
+        
+        
+        return x, y1, y2
+    
     # Calcualte the gaussian transfer function
     def gauss_transfer_function(self, x, mu, std):
         return np.exp(-1*np.divide(np.square(x-mu),(2*np.square(std))))

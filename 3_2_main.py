@@ -22,7 +22,7 @@ if __name__ == "__main__":
     # Initialize class w/ node count
     rbf = RadialBasisFunctions(100)
     # Set parameters for RBF
-    mu_range = [0, 5]
+    mu_range = [0, round(2*math.pi,1)]
     std = 1
     rbf.lr = .01
     epochs = 100
@@ -52,6 +52,12 @@ if __name__ == "__main__":
     # Call functions to generate train and test dataseta
     x_train, sin_train, square_train = rbf.generate_sin_and_square(train_range,step)
     x_test, sin_test, square_test = rbf.generate_sin_and_square(test_range,step)
+
+    
+    
+    # Shuffle data
+    #x_train, sin_train, square_train = rbf.shuffle_data(x_train, sin_train, square_train)
+    #x_test, sin_test, square_test = rbf.shuffle_data(x_test, sin_test, square_test)
     
     if add_noise:
         # Add zero mean, low variance noise to data
