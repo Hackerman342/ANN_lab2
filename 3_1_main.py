@@ -54,11 +54,14 @@ if __name__ == "__main__":
     #std_vec = np.linspace(.2,std,rbf.node_count)
     
      
-    ls_weights, phi_train = rbf.least_squares(x_train, mu_vec, std_vec, f_train)
-    _, phi_test = rbf.least_squares(x_test, mu_vec, std_vec, f_test)
+    # Build phi arrays
+    phi_train = rbf.build_phi(x_train, mu_vec, std_vec)
+    phi_test = rbf.build_phi(x_test, mu_vec, std_vec)     
+    # Call least squares functoin to calc ls weights
+    w = rbf.least_squares(phi_train, f_train)
     
-    fhat_train = np.dot(phi_train, ls_weights)
-    fhat_test = np.dot(phi_test, ls_weights)
+    fhat_train = np.dot(phi_train, w)
+    fhat_test = np.dot(phi_test, w)
     
     ARE_train = rbf.ARE(f_train, fhat_train)
     ARE_test = rbf.ARE(f_test, fhat_test)

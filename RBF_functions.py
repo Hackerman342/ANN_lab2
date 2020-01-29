@@ -37,36 +37,31 @@ class RadialBasisFunctions():
             plt.show()
             
         return x, sin, square
-        
     
-    def least_squares(self, x, mu_vec, std_vec, f):
+    def build_phi(self, x, mu_vec, std_vec):
         # x is size 1xN | mu_vec & std_vec are size 1xn
-
         # Reshape all input vectors to Nxn arrays
         x_arr = np.repeat(x.reshape(-1,1),mu_vec.size,axis=1)
         mu_arr = np.repeat(mu_vec.reshape(1,-1),x.size,axis=0)
-        std_arr = np.repeat(std_vec.reshape(1,-1),x.size,axis=0)
-       
+        std_arr = np.repeat(std_vec.reshape(1,-1),x.size,axis=0)       
         # Calculate array of transfer functions for all combos of x & mu+std
-        big_phi = self.gauss_transfer_function(x_arr, mu_arr, std_arr)
-
+        phi = self.gauss_transfer_function(x_arr, mu_arr, std_arr)
+        return phi        
+    
+    def least_squares(self, phi, f):
         # Calculate least squares of weight vector - ignore other returns
-        ls_weights, _, _, _ =  np.linalg.lstsq(big_phi,f, rcond=None)
-                
-        return ls_weights, big_phi
+        w, _, _, _ =  np.linalg.lstsq(phi,f, rcond=None)
+        return w
     
     
-    def delta_rule(self, x, f, w, mu_vec, std_vec):
+    def delta_rule(self, x, f, w, phi):
         # x and f are size 1x1 | mu_vec & std_vec are size 1xn
         if x.size != 1 or f.size != 1:
             print("error - only pass one point at at time to delta_rule func")
             return 'error'
-        
-        # Calculate transfer function (column vector)
-        phi = self.gauss_transfer_function(x, mu_vec.reshape(-1,1), std_vec.reshape(-1,1))
         # Calculate weight updates (column vector)
-        dw = self.lr*(f - np.dot(phi.T,w))*phi
-        return dw, phi
+        dw = self.lr*(f - np.dot(phi.reshape(1,-1),w))*phi.reshape(-1,1)
+        return dw
         
     ##### Support functions ######
     

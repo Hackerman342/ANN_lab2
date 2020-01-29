@@ -15,7 +15,8 @@ from mpl_toolkits import mplot3d
 # Import necessary classes from script with functions
 from RBF_functions import RadialBasisFunctions
 
-
+###### STILL NEED TO ADD COMPETITIVE LEARNING ########
+###### THIS IS (PRETTY MUCH) JUST A COPY OF 3_2_main CURRENTLY ########
 
 if __name__ == "__main__":
     
@@ -31,13 +32,9 @@ if __name__ == "__main__":
     sin_or_square = 'sin'
     #sin_or_square = 'square'
     
-    # Set which input function to approximate
-    ls_or_delta = 'ls'
-    ls_or_delta = 'delta'
-    
     # Boolean for whether or not to use random standard deviations
     rand_std = True
-    rand_std = False    
+    rand_std = False
     
     # Boolean for whether or not to add gaussian noise
     add_noise = True
@@ -47,7 +44,6 @@ if __name__ == "__main__":
     train_range = [0 , 2*math.pi]
     test_range = [0.05 , 2*math.pi + 0.05]
     step = 0.1
-
     
     # Call functions to generate train and test dataseta
     x_train, sin_train, square_train = rbf.generate_sin_and_square(train_range,step)
@@ -80,35 +76,31 @@ if __name__ == "__main__":
     phi_train = rbf.build_phi(x_train, mu_vec, std_vec)
     phi_test = rbf.build_phi(x_test, mu_vec, std_vec)  
     
-    if ls_or_delta == 'ls': 
-        # Call least squares functoin to calc ls weights
-        w = rbf.least_squares(phi_train, f_train)#.reshape(-1,1)
-    
-    elif ls_or_delta == 'delta':
-        # initialize random weights as column
-        w = np.random.randn(rbf.node_count).reshape(-1,1)
-        # Initialize vectors for storing errors
-        ARE_train = np.zeros((1,epochs)).flatten()
-        ARE_test = np.zeros((1,epochs)).flatten()
-        # Iteratively call delta rule function and update weights
-        for i in range(epochs):
-            for j in range(len(x_train)):
-                w += rbf.delta_rule(x_train[j], f_train[j], w, phi_train[j,:])
-            # Flatten w to 1-D for dot product
-            w_temp = w.flatten()
-            # Calculate predicted outputs
-            fhat_train = np.dot(phi_train, w_temp)
-            fhat_test = np.dot(phi_test, w_temp)
-            # Measure absolute residual error
-            ARE_train[i] = rbf.ARE(f_train, fhat_train)
-            ARE_test[i] = rbf.ARE(f_test, fhat_test)
-        # Show ARE trend
-        plt.plot(ARE_train, label = "Training ARE")
-        plt.plot(ARE_test, label = "Testing ARE")
-        plt.legend()
-        plt.show()
+    # initialize random weights as column
+    w = np.random.randn(rbf.node_count).reshape(-1,1)
+    # Initialize vectors for storing errors
+    ARE_train = np.zeros((1,epochs)).flatten()
+    ARE_test = np.zeros((1,epochs)).flatten()
+    # Iteratively call delta rule function and update weights
+    for i in range(epochs):
+        for j in range(len(x_train)):
+            w += rbf.delta_rule(x_train[j], f_train[j], w, phi_train[j,:])
         # Flatten w to 1-D for dot product
-        w = w.flatten()    
+        w_temp = w.flatten()
+        # Calculate predicted outputs
+        fhat_train = np.dot(phi_train, w_temp)
+        fhat_test = np.dot(phi_test, w_temp)
+        # Measure absolute residual error
+        ARE_train[i] = rbf.ARE(f_train, fhat_train)
+        ARE_test[i] = rbf.ARE(f_test, fhat_test)
+    
+    # Show ARE trend
+    plt.plot(ARE_train, label = "Training ARE")
+    plt.plot(ARE_test, label = "Testing ARE")
+    plt.legend()
+    plt.show()
+    # Flatten w to 1-D for dot product
+    w = w.flatten()    
 
     # Calculate predicted outputs
     fhat_train = np.dot(phi_train, w)
