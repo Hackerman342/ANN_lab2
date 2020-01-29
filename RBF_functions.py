@@ -51,8 +51,7 @@ class RadialBasisFunctions():
     def least_squares(self, phi, f):
         # Calculate least squares of weight vector - ignore other returns
         w, _, _, _ =  np.linalg.lstsq(phi,f, rcond=None)
-        return w
-    
+        return w   
     
     def delta_rule(self, x, f, w, phi):
         # x and f are size 1x1 | mu_vec & std_vec are size 1xn
@@ -62,21 +61,18 @@ class RadialBasisFunctions():
         # Calculate weight updates (column vector)
         dw = self.lr*(f - np.dot(phi.reshape(1,-1),w))*phi.reshape(-1,1)
         return dw
+    
+    
+    def competitive_learning_1D(self, x, mu_vec):
+        # Find index of closest mu (gaussian center) a.k.a. the 'winner'
+        ind = np.where(abs(x-mu_vec) == np.amin(abs(x-mu_vec)))
+        # Update winner [shift towards x]
+        mu_vec[ind] += self.lr*(x - mu_vec[ind])
+        return mu_vec
+ 
         
     ##### Support functions ######
     
-    
-    # Shuffle data for delta learning
-    def shuffle_data(self, x, y1, y2):
-        #
-        # Ensure proper shape of x, y1, & y2 is 1xN
-        x = x.reshape(-1)
-        y1 = y1.reshape(-1)
-        y2 = y2.reshape(-1)
-        
-        
-        
-        return x, y1, y2
     
     # Calcualte the gaussian transfer function
     def gauss_transfer_function(self, x, mu, std):
@@ -93,4 +89,21 @@ class RadialBasisFunctions():
     # Adds random gaussian noise to array x
     def add_gauss_noise(self, x, mu, std):
         return x + np.random.randn(x.size).reshape(x.shape)*std + mu
+    
+    ##### Unused functions ######
+
+#    # Shuffle data for delta learning
+#    def shuffle_data(self, x, y1, y2):
+#        #
+#        # Ensure proper shape of x, y1, & y2 is 1xN
+#        x = x.reshape(-1)
+#        y1 = y1.reshape(-1)
+#        y2 = y2.reshape(-1)
+#        
+#        rand_ids = np.random.permutation(x.size)     
+#        x = x[rand_ids]
+#        y1 =y1[rand_ids]
+#        y2 = y2[rand_ids]
+#        
+#        return x, y1, y2
         

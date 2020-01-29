@@ -20,7 +20,7 @@ from RBF_functions import RadialBasisFunctions
 if __name__ == "__main__":
     
     # Initialize class w/ node count
-    rbf = RadialBasisFunctions(63)
+    rbf = RadialBasisFunctions(25)
             
     # Set parameters for RBF
     mu_range = [0, round(2*math.pi,1)]
@@ -53,11 +53,19 @@ if __name__ == "__main__":
         
 
     mu_vec = np.linspace(mu_range[0], mu_range[1],rbf.node_count)
+
     if rand_std:    
         std_vec = std*np.random.rand(rbf.node_count)
     else:
         std_vec = std*np.ones((1,rbf.node_count))
     
+    # Square wave function approximation
+#    mu_vec = np.array([1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,3,3,3,3,3,3,3,3,4,4,4,4,
+#                       4,4,4,4,5,5,5,5,5,5,5,5])
+#    std_vec = np.array([1., 1/3, 1/5, 1/7, 1/9, 1/11, 1/13, 1/15, 1., 1/3, 1/5,
+#                        1/7, 1/9, 1/11, 1/13, 1/15, 1., 1/3, 1/5, 1/7, 1/9, 1/11,
+#                        1/13, 1/15, 1., 1/3, 1/5, 1/7, 1/9, 1/11, 1/13, 1/15, 
+#                        1., 1/3, 1/5, 1/7, 1/9, 1/11, 1/13, 1/15])
      
     # Build phi arrays
     phi_train = rbf.build_phi(x_train, mu_vec, std_vec)
