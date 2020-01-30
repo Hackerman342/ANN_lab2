@@ -15,30 +15,34 @@ from mpl_toolkits import mplot3d
 # Import necessary classes from script with functions
 from RBF_functions import RadialBasisFunctions
 
-N_HIDDEN_NODES = 11
 
-if __name__ == "__main__":
-    
+def transform_RBF_square(values):
+    return [1 if i > 0 else -1 for i in values]
+def RBF_NN(n_nodes, sin_or_square="sin", std = 1, tranf_test=False, rand_std=False, plot=False, verbose=True):
+        
     # Initialize class w/ node count
-    rbf = RadialBasisFunctions(N_HIDDEN_NODES)
-
+    rbf = RadialBasisFunctions(n_nodes)
             
     # Set parameters for RBF
     mu_range = [0, round(2*math.pi,1)]
-    std = 1
+    #std = 1
 
     # Set which input function to approximate
-    sin_or_square = 'sin'
+
+    #sin_or_square = 'sin'
     #sin_or_square = 'square'
     
     # Boolean for whether or not to use random standard deviations
-    rand_std = False 
+    #rand_std = True
+    #rand_std = False 
     
     # Set parameters for data
     train_range = [0 , 2*math.pi]
     test_range = [0.05 , 2*math.pi + 0.05]
     step = 0.1
-
+    #tranform RBF output to square
+    tranf_train = False
+    tranf_test = False
     
     # Call functions to generate train and test dataseta
     x_train, sin_train, square_train = rbf.generate_sin_and_square(train_range,step)
@@ -76,21 +80,40 @@ if __name__ == "__main__":
     fhat_train = np.dot(phi_train, w)
     fhat_test = np.dot(phi_test, w)
     
+    if tranf_train:
+        fhat_train = transform_RBF_square(fhat_train)
+    if tranf_test:
+        fhat_test = transform_RBF_square(fhat_test)
+        
+    
     ARE_train = rbf.ARE(f_train, fhat_train)
     ARE_test = rbf.ARE(f_test, fhat_test)
+    if verbose:
+        print("Training ARE: ", ARE_train)
+        print("Training visual fit")
+    if plot:
+        plt.plot(x_train,f_train)
+        plt.plot(x_train,fhat_train)
+        plt.show()
     
-    print("Training ARE: ", ARE_train)
-    print("Training visual fit")
-    plt.plot(x_train,f_train)
-    plt.plot(x_train,fhat_train)
-    plt.show()
+    if verbose:
+        print("Testing ARE: ", ARE_test)
+        print("Testing visual fit")
+    if plot:
+        plt.plot(x_test, f_test)
+        plt.plot(x_test, fhat_test)
+        plt.show()
+    return ARE_test
 
-    print("Testing ARE: ", ARE_test)
-    print("Testing visual fit")
-    plt.plot(x_test,f_test,'k',label='Real')
-    plt.plot(x_test,fhat_test, '--c', label='Predicted')
-    title = str(N_HIDDEN_NODES) + " hidden nodes"
-    plt.title(title)
-    plt.legend()
-    plt.show()
+if __name__ == "__main__":
+    RBF_NN(6, sin_or_square="sin", std = 1, tranf_test=False, rand_std=False, plot=True)
+    '''
+    sigma_list = np.linspace(0.001, 1, 1000)
+    for sigma in sigma_list:
+        for nodes in range(1, 140):
+            print("Sigma " + str(sigma) + ". Nodes " + str(nodes) + "\n")
+            ARE = RBF_NN(nodes, sin_or_square='square', std = sigma, plot=False, verbose=False)
+            if ARE <= 0.001:
+                break
+    '''
 
