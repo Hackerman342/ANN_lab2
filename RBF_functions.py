@@ -51,6 +51,7 @@ class RadialBasisFunctions():
     def least_squares(self, phi, f):
         # Calculate least squares of weight vector - ignore other returns
         w, _, _, _ =  np.linalg.lstsq(phi,f, rcond=None)
+        
         return w   
     
     def delta_rule(self, x, f, w, phi):
