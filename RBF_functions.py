@@ -48,27 +48,84 @@ class RadialBasisFunctions():
         phi = self.gauss_transfer_function(x_arr, mu_arr, std_arr)
         return phi        
     
+    
     def least_squares(self, phi, f):
         # Calculate least squares of weight vector - ignore other returns
         w, _, _, _ =  np.linalg.lstsq(phi,f, rcond=None)
         
         return w   
     
-    def delta_rule(self, x, f, w, phi):
-        # x and f are size 1x1 | mu_vec & std_vec are size 1xn
-        if x.size != 1 or f.size != 1:
-            print("error - only pass one point at at time to delta_rule func")
-            return 'error'
+    
+    def delta_learning(self, f_train, phi_train, epochs, plot_result_per_epoch = True, f_test = None, phi_test = None):
+        # initialize random weights as column
+        w = np.random.randn(self.node_count).reshape(-1,1)
+        # Choose random order of points for weight update 
+        # Initialize vectors for storing errors
+        ARE_train = np.zeros(epochs)
+        ARE_test = np.zeros(epochs)
+        # Iteratively call delta rule function and update weights
+        for i in range(epochs):
+            rand_ids = np.random.permutation(f_train.size)     
+
+            for idx_training_point in rand_ids:
+                w += self.delta_rule(f_train[idx_training_point], w, phi_train[idx_training_point])
+            
+            if plot_result_per_epoch:
+                # Flatten w to 1-D for dot product - just used for ARE trend/plot
+                w_temp = w.flatten()
+                # Calculate predicted outputs
+                fhat_train = np.dot(phi_train, w_temp)
+                fhat_test = np.dot(phi_test, w_temp)
+                # Measure absolute residual error
+                ARE_train[i] = self.ARE(f_train, fhat_train)
+                ARE_test[i] = self.ARE(f_test, fhat_test)
+        
+        if plot_result_per_epoch:
+            plt.plot(ARE_train, 'k',label='Training ARE')
+            plt.plot(ARE_test, '--c', label='Testing ARE')
+            title = str(self.node_count) + " hidden nodes"
+            plt.xlabel("epochs")
+            plt.ylabel("ARE")
+            plt.title(title)
+            plt.legend()
+            plt.show()
+        
+        return w
+    
+    
+    def delta_rule(self, f_point, w, phi_x):
+        """
+        @param f_point are size 1x1 | w & phi are size 1xn_hidden_nodes
+        
+        @return column vector with the updated weights of each RBF node
+        """
+    
+        if f_point.size != 1:
+            raise Exception("only pass one point at at time to delta_rule func")
+        
         # Calculate weight updates (column vector)
-        dw = self.lr*(f - np.dot(phi.reshape(1,-1),w))*phi.reshape(-1,1)
+        dw = self.lr*(f_point - np.dot(phi_x, w))*phi_x.reshape(-1,1)
         return dw
     
     
     def competitive_learning_1D(self, x, mu_vec):
+        rand_ids = np.random.permutation(x.size)     
+        # limit number of iterations??
+        for iteration in range(len(rand_ids)):
+            idx_training_sample = rand_ids[iteration]
+            mu_vec =  self.update_mu_CL(x[idx_training_sample], mu_vec)
+            
+        return mu_vec
+    
+    
+    def update_mu_CL(self, x, mu_vec):
         # Find index of closest mu (gaussian center) a.k.a. the 'winner'
-        ind = np.where(abs(x-mu_vec) == np.amin(abs(x-mu_vec)))
+        
+        # euclidean distance 1D
+        idx_winning_rbf = np.argmin(np.abs(x-mu_vec))
+        
         # Update winner [shift towards x]
-        mu_vec[ind] += self.lr*(x - mu_vec[ind])
+        mu_vec[idx_winning_rbf] += self.lr*(x - mu_vec[idx_winning_rbf])
         return mu_vec
  
         

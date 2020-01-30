@@ -18,6 +18,8 @@ from RBF_functions import RadialBasisFunctions
 
 def transform_RBF_square(values):
     return [1 if i > 0 else -1 for i in values]
+
+
 def RBF_NN(n_nodes, sin_or_square="sin", std = 1, tranf_test=False, rand_std=False, plot=False, verbose=True):
         
     # Initialize class w/ node count
@@ -100,8 +102,11 @@ def RBF_NN(n_nodes, sin_or_square="sin", std = 1, tranf_test=False, rand_std=Fal
         print("Testing ARE: ", ARE_test)
         print("Testing visual fit")
     if plot:
-        plt.plot(x_test, f_test)
-        plt.plot(x_test, fhat_test)
+        plt.plot(x_test,f_test,'k',label='Real')
+        plt.plot(x_test,fhat_test, '--c', label='Predicted')
+        title = str(n_nodes) + " hidden nodes"
+        plt.title(title)
+        plt.legend()
         plt.show()
     return ARE_test
 
