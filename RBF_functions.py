@@ -11,7 +11,7 @@ import math
 import numpy as np 
 import matplotlib.pyplot as plt
 from mpl_toolkits import mplot3d
-
+import random 
 
 
 
@@ -101,38 +101,38 @@ class RadialBasisFunctions():
         """
     
         if f_point.size != 1:
-            raise Exception("only pass one point at at time to delta_rule func")
+            raise Exception("Only pass one point at at time to delta_rule func")
         
         # Calculate weight updates (column vector)
         dw = self.lr*(f_point - np.dot(phi_x, w))*phi_x.reshape(-1,1)
         return dw
     
     
-    def competitive_learning_1D(self, x, mu_vec):
-        rand_ids = np.random.permutation(x.size)     
+    def competitive_learning_1D(self, x_train, mu_vec, n_iterations=10):
+        rand_ids = np.random.permutation(x_train.size)     
         # limit number of iterations??
-        for iteration in range(len(rand_ids)):
-            idx_training_sample = rand_ids[iteration]
-            mu_vec =  self.update_mu_CL(x[idx_training_sample], mu_vec)
+        for iteration in range(n_iterations):
+        #for iteration in range(len(rand_ids)):
+            idx_training_sample = random.randint(0,len(x_train)-1)
+            #idx_training_sample = rand_ids[iteration]
+            mu_vec =  self.update_mu_CL(x_train[idx_training_sample], mu_vec)
             
         return mu_vec
     
     
-    def update_mu_CL(self, x, mu_vec):
+    def update_mu_CL(self, x_train_point, mu_vec):
         # Find index of closest mu (gaussian center) a.k.a. the 'winner'
         
         # euclidean distance 1D
-        idx_winning_rbf = np.argmin(np.abs(x-mu_vec))
+        idx_winning_rbf = np.argmin(np.abs(x_train_point-mu_vec))
         
         # Update winner [shift towards x]
-        mu_vec[idx_winning_rbf] += self.lr*(x - mu_vec[idx_winning_rbf])
+        mu_vec[idx_winning_rbf] += self.lr*(x_train_point) #- mu_vec[idx_winning_rbf])
         return mu_vec
  
-        
-    ##### Support functions ######
+            
     
-    
-    # Calcualte the gaussian transfer function
+    # Calculate the gaussian transfer function
     def gauss_transfer_function(self, x, mu, std):
         return np.exp(-1*np.divide(np.square(x-mu),(2*np.square(std))))
     
@@ -148,6 +148,22 @@ class RadialBasisFunctions():
     def add_gauss_noise(self, x, mu, std):
         return x + np.random.randn(x.size).reshape(x.shape)*std + mu
     
+    
+    def plot_results(self, x, f, fhat, print_mu_centers=False, mu_vec=None, mu_vec_init=None):
+        plt.plot(x,f,'k',label='Real')
+        plt.plot(x,fhat, '--c', label='Predicted')
+        if print_mu_centers:
+            old_and_new_mu_vec = np.concatenate([mu_vec,mu_vec_init])
+            classes = np.zeros(len(old_and_new_mu_vec))
+            classes[len(mu_vec):] = 1 
+            plt.scatter(mu_vec_init,np.zeros(len(mu_vec_init)), label="initial mu", alpha=0.3) 
+            plt.scatter(mu_vec,np.zeros(len(mu_vec)), label="mu after CL", alpha=0.5) 
+
+        title = str(self.node_count) + " hidden nodes"
+        plt.title(title)
+        plt.legend()
+        plt.show()
+
     ##### Unused functions ######
 
 #    # Shuffle data for delta learning
