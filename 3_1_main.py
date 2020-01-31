@@ -111,7 +111,8 @@ def RBF_NN(n_nodes, sin_or_square="sin", std = 1, tranf_test=False, rand_std=Fal
     return ARE_test
 
 if __name__ == "__main__":
-    RBF_NN(6, sin_or_square="sin", std = 1, tranf_test=False, rand_std=False, plot=True)
+    RBF_NN(11, sin_or_square="sin", std = 1, tranf_test=False, rand_std=False, plot=True)
+    
     '''
     sigma_list = np.linspace(0.001, 1, 1000)
     for sigma in sigma_list:

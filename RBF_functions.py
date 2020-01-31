@@ -51,7 +51,7 @@ class RadialBasisFunctions():
     
     def least_squares(self, phi, f):
         # Calculate least squares of weight vector - ignore other returns
-        w, _, _, _ =  np.linalg.lstsq(phi,f, rcond=None)
+        w = np.linalg.inv(np.transpose(phi) @ phi) @ np.transpose(phi) @ f
         
         return w   
     
@@ -108,15 +108,15 @@ class RadialBasisFunctions():
         return dw
     
     
-    def competitive_learning_1D(self, x_train, mu_vec, n_iterations=10):
-        rand_ids = np.random.permutation(x_train.size)     
-        # limit number of iterations??
-        for iteration in range(n_iterations):
-        #for iteration in range(len(rand_ids)):
-            idx_training_sample = random.randint(0,len(x_train)-1)
-            #idx_training_sample = rand_ids[iteration]
-            mu_vec =  self.update_mu_CL(x_train[idx_training_sample], mu_vec)
-            
+    def competitive_learning_1D(self, x_train, mu_vec, n_epochs=100):
+        for epoch in range(n_epochs):
+            rand_ids = np.random.permutation(x_train.size)     
+            # limit number of iterations??
+            for iteration_training_point in range(len(rand_ids)):
+                # idx_training_sample = random.randint(0,len(x_train)-1)
+                idx_training_sample = rand_ids[iteration_training_point]
+                mu_vec =  self.update_mu_CL(x_train[idx_training_sample], mu_vec)
+                
         return mu_vec
     
     
@@ -127,7 +127,7 @@ class RadialBasisFunctions():
         idx_winning_rbf = np.argmin(np.abs(x_train_point-mu_vec))
         
         # Update winner [shift towards x]
-        mu_vec[idx_winning_rbf] += self.lr*(x_train_point) #- mu_vec[idx_winning_rbf])
+        mu_vec[idx_winning_rbf] += self.lr*(x_train_point - mu_vec[idx_winning_rbf])
         return mu_vec
  
             
@@ -146,7 +146,8 @@ class RadialBasisFunctions():
     
     # Adds random gaussian noise to array x
     def add_gauss_noise(self, x, mu, std):
-        return x + np.random.randn(x.size).reshape(x.shape)*std + mu
+        noise = np.random.normal(mu, std, x.size)
+        return x + noise
     
     
     def plot_results(self, x, f, fhat, print_mu_centers=False, mu_vec=None, mu_vec_init=None):
@@ -163,6 +164,8 @@ class RadialBasisFunctions():
         plt.title(title)
         plt.legend()
         plt.show()
+
+
 
     ##### Unused functions ######
 
