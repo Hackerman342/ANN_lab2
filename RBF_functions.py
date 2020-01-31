@@ -56,7 +56,7 @@ class RadialBasisFunctions():
         return w   
     
     
-    def delta_learning(self, f_train, phi_train, epochs, plot_result_per_epoch = True, f_test = None, phi_test = None):
+    def delta_learning(self, f_train, phi_train, epochs, plot_result_per_epoch = False, f_test = None, phi_test = None, randomize_samples=False):
         # initialize random weights as column
         w = np.random.randn(self.node_count).reshape(-1,1)
         # Choose random order of points for weight update 
@@ -65,7 +65,8 @@ class RadialBasisFunctions():
         ARE_test = np.zeros(epochs)
         # Iteratively call delta rule function and update weights
         for i in range(epochs):
-            rand_ids = np.random.permutation(f_train.size)     
+            if randomize_samples:
+                rand_ids = np.random.permutation(f_train.size)     
 
             for idx_training_point in rand_ids:
                 w += self.delta_rule(f_train[idx_training_point], w, phi_train[idx_training_point])
@@ -104,7 +105,8 @@ class RadialBasisFunctions():
             raise Exception("Only pass one point at at time to delta_rule func")
         
         # Calculate weight updates (column vector)
-        dw = self.lr*(f_point - np.dot(phi_x, w))*phi_x.reshape(-1,1)
+        error = f_point - np.dot(phi_x, w)
+        dw = self.lr*(error)*phi_x.reshape(-1,1)
         return dw
     
     
