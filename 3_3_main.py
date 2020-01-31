@@ -94,7 +94,9 @@ def train_RBF_network(n_hidden_nodes, use_cl, std = 1, learning_rate = .1, epoch
         rbf.plot_results(x_train,f_train, fhat_train, print_mu_centers=True, mu_vec=mu_vec, mu_vec_init=mu_vec_init)
     
         rbf.plot_results(x_test,f_test, fhat_test)
- 
+    
+    return ARE_train,ARE_test
+    
   
 if __name__ == "__main__":    
     #sin_or_square = 'square'
@@ -123,10 +125,33 @@ if __name__ == "__main__":
 
     
     #train_RBF_network(n_hidden_nodes, use_cl=False, std = 0.5,  mu_range=mu_range, plot_results=False,do_linespace=True)
-
-
+    ARE_train_list = [] 
+    ARE_test_list =  []
+    
+    # No Competitive Learning
+    ARE_train, ARE_test = train_RBF_network(n_hidden_nodes, use_cl=False, std = 0.5, plot_results=False)
+    
+    ARE_train_list.append(ARE_train)
+    ARE_test_list.append(ARE_test)
+    
+    
+    ################################################
+    ## GRID SEARCH NUMBER OF EPOCHS CL 
     grid_search_epochs_CL = [20, 50, 100, 500, 1000, 5000, 8000, 10000, 20000, 40000, 50000, 100000]
+    
     for epochs_CL in grid_search_epochs_CL:
         print("Number of epochs: " + str(epochs_CL))
-        train_RBF_network(n_hidden_nodes, use_cl, std = 0.5, epochs_CL=epochs_CL, plot_results=False)
+        
+        ARE_train,ARE_test = train_RBF_network(n_hidden_nodes, use_cl, std = 0.5, epochs_CL=epochs_CL, plot_results=False)
+        
+        ARE_train_list.append(ARE_train)
+        ARE_test_list.append(ARE_test)
     
+    x = range(len(ARE_train_list))
+    plt.plot(x,ARE_train_list,'k',label='Train')
+    plt.plot(x,ARE_test_list, '--c', label='Test')
+    plt.xlabel("Number epochs CL")
+    plt.ylabel("ARE")
+    plt.legend()
+    plt.show()
+    ################################################
