@@ -67,7 +67,9 @@ class RadialBasisFunctions():
         for i in range(epochs):
             if randomize_samples:
                 rand_ids = np.random.permutation(f_train.size)     
-
+            else:
+                rand_ids = range(f_train.size)
+                
             for idx_training_point in rand_ids:
                 w += self.delta_rule(f_train[idx_training_point], w, phi_train[idx_training_point])
             

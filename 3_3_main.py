@@ -117,16 +117,16 @@ if __name__ == "__main__":
     #mu_vec_init = np.array([4.46506106, 0.07038114, 0.49323453, 3.47258945, 2.58994933,3.83851232, 0.71430821, 3.77674251, 4.19862989, 1.77314162, 4.7771036 ])
     # np.random.randn(rbf.node_count)
     
-    train_RBF_network(n_hidden_nodes, use_cl, std = 0.8, epochs_CL=100, plot_results=False)
+    #train_RBF_network(n_hidden_nodes, use_cl, std = 0.8, epochs_CL=100, plot_results=False)
         
     #train_RBF_network(n_hidden_nodes, use_cl, std = 0.5, epochs_CL=1000, mu_range=mu_range, plot_results=True,do_linespace=False, mu_vec_init=mu_vec_init)
 
-    """
-    train_RBF_network(n_hidden_nodes, use_cl=False, std = 0.5,  mu_range=mu_range, plot_results=False,do_linespace=True)
+    
+    #train_RBF_network(n_hidden_nodes, use_cl=False, std = 0.5,  mu_range=mu_range, plot_results=False,do_linespace=True)
 
 
     grid_search_epochs_CL = [20, 50, 100, 500, 1000, 5000, 8000, 10000, 20000, 40000, 50000, 100000]
     for epochs_CL in grid_search_epochs_CL:
         print("Number of epochs: " + str(epochs_CL))
-        train_RBF_network(n_hidden_nodes, use_cl, std = 0.5, epochs_CL=epochs_CL, mu_range=mu_range, plot_results=False,do_linespace=True)
-    """
+        train_RBF_network(n_hidden_nodes, use_cl, std = 0.5, epochs_CL=epochs_CL, plot_results=False)
+    
