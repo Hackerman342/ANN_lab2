@@ -15,7 +15,7 @@ from mpl_toolkits import mplot3d
 # Import necessary classes from script with functions
 from RBF_functions import RadialBasisFunctions
 
-
+np.random.seed(123)
 def RBF_NN(n_nodes, sin_or_square="sin", std = 1, ls_or_delta = 'ls', eta = 0.01, epochs=100, add_noise = False, rand_std=False, plot=False, verbose=True):
     rbf = RadialBasisFunctions(n_nodes)
     # Set parameters for RBF
@@ -67,7 +67,8 @@ def RBF_NN(n_nodes, sin_or_square="sin", std = 1, ls_or_delta = 'ls', eta = 0.01
         f_test = square_test
         
 
-    mu_vec = np.linspace(mu_range[0], mu_range[1],rbf.node_count)
+    mu_vec = np.linspace(mu_range[0], mu_range[1], rbf.node_count)
+    np.random.uniform(low=mu_range[0], high=mu_range[1], size=rbf.node_count)
         
     if rand_std:    
         std_vec = std*np.random.rand(rbf.node_count)
@@ -111,27 +112,46 @@ def RBF_NN(n_nodes, sin_or_square="sin", std = 1, ls_or_delta = 'ls', eta = 0.01
     return ARE_test
 
 if __name__ == "__main__":
+    
+    '''
+    etas = np.linspace(0, 1, 100)
+    results = []
+    for e in etas:
+        results.append(RBF_NN(60, sin_or_square="square", std = 0.03, eta = e, ls_or_delta = 'delta', epochs=100, add_noise = True, rand_std=True, plot=False, verbose=False))
+    #print(results)
+    
+    plt.plot(etas, results)
+    plt.xlabel('Learning rate')
+    plt.ylabel('ARE')
+    plt.show()
+    '''
+    
     ls_error = np.Infinity
     ls_sigma = 0
     ls_nodes = 0
     delta_error = np.Infinity
     delta_sigma = 0
     delta_nodes = 0
-    for sigma in [0.01, 0.05, 0.08, 0.1 , 0.3, 0.6, 1]:
-        for nodes in [10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80]:
-            #print("Sigma " + str(sigma) + ". Nodes " + str(nodes) + "\n")
-            err1 = RBF_NN(nodes, sin_or_square="square", std = sigma, ls_or_delta = 'ls', epochs=100, add_noise = True, rand_std=True, plot=False, verbose=False)
+    sigmas = np.linspace(0.001, 1, 50)
+    for sigma in sigmas:#[0.005, 0.01, 0.05, 0.08, 0.1 , 0.3, 0.6, 0.8, 1]:
+        nodes_list = np.arange(2, 70, 1)
+        print(sigmas)
+        for nodes in nodes_list:#[10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80]:
+            print("Sigma " + str(sigma) + ". Nodes " + str(nodes) + "\n")
+            #err1 = RBF_NN(nodes, sin_or_square="square", std = sigma, ls_or_delta = 'ls', epochs=100, add_noise = True, rand_std=False, plot=False, verbose=False)
             if err1 < ls_error:
                 ls_error = err1
                 ls_sigma = sigma
                 ls_nodes = nodes
-            #print("\n")
-            err2 = RBF_NN(nodes, sin_or_square="square", std = sigma, ls_or_delta = 'delta', eta = 0.01, epochs=100, add_noise = True, rand_std=False, plot=False, verbose=False)
+            #print(err1)
+            print("\n")
+            err2 = RBF_NN(nodes, sin_or_square="sin", std = sigma, ls_or_delta = 'delta', eta = 0.01, epochs=100, add_noise = True, rand_std=False, plot=False, verbose=False)
             if err2 < delta_error:
                 delta_error = err2
                 delta_sigma = sigma
                 delta_nodes = nodes
-            #print("\n---------------------------------")
+            print(err2)
+            print("\n---------------------------------")
     print("Sigma " + str(ls_sigma) + ". Nodes " + str(ls_nodes) + " Error "+ str(ls_error))
     print("Sigma " + str(delta_sigma) + ". Nodes " + str(delta_nodes) + " Error "+ str(delta_error))
     
