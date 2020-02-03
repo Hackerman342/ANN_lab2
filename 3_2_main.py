@@ -125,7 +125,7 @@ if __name__ == "__main__":
     plt.ylabel('ARE')
     plt.show()
     '''
-    
+    '''
     ls_error = np.Infinity
     ls_sigma = 0
     ls_nodes = 0
@@ -154,4 +154,5 @@ if __name__ == "__main__":
             print("\n---------------------------------")
     print("Sigma " + str(ls_sigma) + ". Nodes " + str(ls_nodes) + " Error "+ str(ls_error))
     print("Sigma " + str(delta_sigma) + ". Nodes " + str(delta_nodes) + " Error "+ str(delta_error))
-    
+    '''
+    print(RBF_NN(55, sin_or_square="sin", std = 0.7145, ls_or_delta = 'delta', eta = 0.01, epochs=100, add_noise = True, rand_std=False, plot=False, verbose=False))

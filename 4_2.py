@@ -34,5 +34,5 @@ def plot_path(dataset, W):
 
 if __name__ == "__main__":
     cities_dataset = get_cities_dataset()
-    W = SOM_train(cities_dataset, n_epochs=30, circular_offset=True, n_nodes=20, initial_neighbourhood_size=2)
+    W = SOM_train(cities_dataset, n_epochs=100, learning_rate=0.6, exp_descrease=True, alpha=0.8, circular_offset=True, n_nodes=10, initial_neighbourhood_size=2)
     plot_path(cities_dataset, W)
