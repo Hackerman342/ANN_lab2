@@ -22,7 +22,7 @@ def get_neighbours_index(index, offset, n_nodes, circular_offset=False):
         return neighbours_indexes
 
 
-def SOM_train(dataset, n_nodes=100, n_epochs = 20, std_w=0.1, initial_neighbourhood_size=50, circular_offset=False, eta=0.2 ):
+def SOM_train(dataset, n_nodes=100, n_epochs = 20, std_w=1, initial_neighbourhood_size=50, circular_offset=False, eta=0.2 ):
     ROWS = dataset.shape[0]
     COL = dataset.shape[1]
     W = np.random.normal(0, std_w, (n_nodes, COL))
@@ -31,7 +31,8 @@ def SOM_train(dataset, n_nodes=100, n_epochs = 20, std_w=0.1, initial_neighbourh
             distances = np.sum(np.square(W - dataset[sample, :]), axis = 1)
             nearest_idx = np.argmin(distances) 
             
-            offset = initial_neighbourhood_size - int((e+1)/n_epochs*(initial_neighbourhood_size))
+            offset = initial_neighbourhood_size - int(np.round((e+1)/n_epochs*(initial_neighbourhood_size)))
+            print(offset)
             neighbours_indexes = get_neighbours_index(nearest_idx, offset, n_nodes, circular_offset=circular_offset)
             W[neighbours_indexes, :] += eta*(dataset[sample,:] - W[neighbours_indexes,:])
     return W
