@@ -34,11 +34,11 @@ def get_extra_data(file_name):
 
     
 
-def get_gender_node_grid(MPs_that_neuron, gender_data):
-    gender_data_node = gender_data[MPs_that_neuron]
+def get_aux_node_grid(MPs_that_neuron, aux_data):
+    aux_data_node = aux_data[MPs_that_neuron]
     # get the most frequent gender in that node
-    most_freq_gender = np.bincount(gender_data_node).argmax()
-    return most_freq_gender
+    most_freq_aux = np.bincount(aux_data_node).argmax()
+    return most_freq_aux
     
     
 def get_district_node_grid():
@@ -52,7 +52,7 @@ def get_party_node_grid():
 
 
 
-def plot_grid__________(votes_best_neuron_arr, n_rows_grid=10, get_gender=False, get_district=False, get_party=False, plot_legend=False):
+def plot_grid_based_extra_data(votes_best_neuron_arr, n_rows_grid=10, get_gender=False, get_district=False, get_party=False, plot_legend=True):
     
     
     gender_data = get_extra_data("data/mpsex.dat")
@@ -86,22 +86,26 @@ def plot_grid__________(votes_best_neuron_arr, n_rows_grid=10, get_gender=False,
             coordinates_scatter[best_neuron_idx,1] = coord_y
         
             if get_gender:
-                most_frequent = get_gender_node_grid(MPs_that_neuron, gender_data)
-            #elif get_district:
-                
-            #elif get_party:
+                most_frequent = get_aux_node_grid(MPs_that_neuron, gender_data)
+                title_text = "gender"
+            elif get_district:
+                most_frequent = get_aux_node_grid(MPs_that_neuron, district_data)
+                title_text = "district"
+            elif get_party:
+                most_frequent = get_aux_node_grid(MPs_that_neuron, party_data)
+                title_text = "party"
+        
         class_list.append(most_frequent)
     
     # plot most_frequent in (coord_x, coord_y)
-    sc = plt.scatter(coordinates_scatter[:,0], coordinates_scatter[:,1], marker = 'o', c=class_list, cmap="bwr_r")
+    sc = plt.scatter(coordinates_scatter[:,0], coordinates_scatter[:,1], marker = 'o', c=class_list, cmap="gist_ncar")
     plt.grid()
     if plot_legend:
         #plot legend
         plt.colorbar(sc)
-    plt.title("SOM nodes grid based on gender")
+    plt.title("SOM nodes grid based on " + title_text)
     plt.show()
 
-    return 0 
 
 
 
@@ -121,7 +125,9 @@ if __name__ == "__main__":
         nearest_idx = SOM.get_best_matching_neuron(weights, votes_data[sample_idx, :])
         votes_best_neuron_arr[sample_idx] = nearest_idx
     
-    
+    plot_grid_based_extra_data(votes_best_neuron_arr, get_gender=True)
+    plot_grid_based_extra_data(votes_best_neuron_arr, get_district=True)
+    plot_grid_based_extra_data(votes_best_neuron_arr, get_party=True)
 
 
 
