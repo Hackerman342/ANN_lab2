@@ -16,6 +16,8 @@ from mpl_toolkits import mplot3d
 from RBF_functions import RadialBasisFunctions
 
 np.random.seed(123)
+
+
 def RBF_NN(n_nodes, sin_or_square="sin", std = 1, ls_or_delta = 'ls', eta = 0.01, epochs=100, add_noise = False, rand_std=False, plot=False, verbose=True):
     rbf = RadialBasisFunctions(n_nodes)
     # Set parameters for RBF

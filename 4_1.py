@@ -6,7 +6,7 @@ Created on Sun Feb  2 16:56:24 2020
 """
 
 import numpy as np
-from SOM import SOM_train
+import SOM
 
 def get_animals_dataset(n_animals = 32, n_dimensions = 84):
     f=open("data/animals.dat", "r")
@@ -25,19 +25,20 @@ def get_name_animals():
     file_lines = f.readlines()
     animal_names = [] 
     for name in file_lines:
-        animal_names.append(name.replace("'", ""))
+        animal_names.append(name.replace("'", "").replace("\t","").replace("\n",""))
+    
     return animal_names
   
 
-def sort_animals(weights, props):
+def sort_animals(weights, animals_dataset):
     animals_names = get_name_animals()
     
     animals_indexes_dict = {}
-    N_ANIMALS = props.shape[0]
-    for animal_index in range(N_ANIMALS):
-        distances = np.sum(np.square(weights - props[animal_index, :]), axis = 1)
-        nearest_idx = np.argmin(distances) 
+    n_animals = animals_dataset.shape[0]
+    for animal_index in range(n_animals):
+        nearest_idx = SOM.get_best_matching_neuron(weights, animals_dataset[animal_index, :])
         animals_indexes_dict[animal_index] = nearest_idx
+        
     sorted_animals_index = sorted(animals_indexes_dict.items(), key=lambda item: item[1])
     animals_sorted = []
     for animal_idx in sorted_animals_index:
@@ -47,5 +48,5 @@ def sort_animals(weights, props):
     
 if __name__ == "__main__":
     animals_dataset = get_animals_dataset()
-    W  = SOM_train(animals_dataset)
-    print(sort_animals(W, animals_dataset))
+    weights  = SOM.SOM_train(animals_dataset)
+    print(sort_animals(weights, animals_dataset))
