@@ -38,6 +38,7 @@ class RadialBasisFunctions():
             
         return x, sin, square
     
+    
     def build_phi(self, x, mu_vec, std_vec):
         # x is size 1xN | mu_vec & std_vec are size 1xn
         # Reshape all input vectors to Nxn arrays
@@ -128,17 +129,24 @@ class RadialBasisFunctions():
         # Find index of closest mu (gaussian center) a.k.a. the 'winner'
         
         # euclidean distance 1D
-        idx_winning_rbf = np.argmin(np.abs(x_train_point-mu_vec))
+        idx_winning_rbf = np.argmin(self.compute_euclidean_distance(x_train_point, mu_vec))
         
         # Update winner [shift towards x]
         mu_vec[idx_winning_rbf] += self.lr*(x_train_point - mu_vec[idx_winning_rbf])
         return mu_vec
  
-            
     
-    # Calculate the gaussian transfer function
+    def compute_euclidean_distance(self, x, mu):
+        sqrt_term = np.sum(np.square(x-mu))
+        euclidean_distance = np.sqrt(sqrt_term)
+        return euclidean_distance
+        
+    
     def gauss_transfer_function(self, x, mu, std):
-        return np.exp(-1*np.divide(np.square(x-mu),(2*np.square(std))))
+        # square euclidean distance 
+        r_square = np.square(self.compute_euclidean_distance(x, mu))
+        return np.exp(-1*np.divide(r_square,(2*np.square(std))))
+    
     
     # Calculate mean square error between function and its approximation
     def MSE(self, f, f_hat):
@@ -148,6 +156,8 @@ class RadialBasisFunctions():
     def ARE(self, f, f_hat):
         return np.mean(np.abs(f - f_hat))
     
+    
+
     # Adds random gaussian noise to array x
     def add_gauss_noise(self, x, mu, std):
         noise = np.random.normal(mu, std, x.size)

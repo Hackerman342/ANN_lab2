@@ -8,15 +8,19 @@ Created on Sun Feb  2 16:56:24 2020
 import numpy as np
 from SOM import SOM_train
 
-def get_animals_dataset(N_ANIMALS = 32, COL = 84):
+def get_animals_dataset(n_animals = 32, n_dimensions = 84):
     f=open("data/animals.dat", "r")
     contents = f.read().split(',')
-    props = np.zeros((N_ANIMALS, COL))
-    for index in range(N_ANIMALS):
-        props[index, :] = contents[index*COL : (index+1)*COL]
+    props = np.zeros((n_animals, n_dimensions))
+    for index in range(n_animals):
+        props[index, :] = contents[index*n_dimensions : (index+1)*n_dimensions]
     return props
 
+
 def get_name_animals():
+    """
+    @return list with the name of each animal
+    """
     f=open("data/animalnames.txt", "r")
     file_lines = f.readlines()
     animal_names = [] 
@@ -24,6 +28,7 @@ def get_name_animals():
         animal_names.append(name.replace("'", ""))
     return animal_names
   
+
 def sort_animals(weights, props):
     animals_names = get_name_animals()
     
@@ -38,6 +43,7 @@ def sort_animals(weights, props):
     for animal_idx in sorted_animals_index:
         animals_sorted.append(animals_names[animal_idx[0]])
     return animals_sorted
+
     
 if __name__ == "__main__":
     animals_dataset = get_animals_dataset()
