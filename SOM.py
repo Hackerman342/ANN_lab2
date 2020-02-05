@@ -21,7 +21,6 @@ def get_neighbours_index(index, offset, n_nodes, circular_offset=False):
         neighbours_indexes = np.arange(lower_neighbour, upper_neighbour + 1, 1)
         return neighbours_indexes
 
-
 def get_best_matching_neuron(weights, sample):
     distances = np.sum(np.square(weights - sample), axis = 1)
     best_matching_neuron = np.argmin(distances) 
