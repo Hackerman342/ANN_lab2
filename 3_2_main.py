@@ -70,23 +70,23 @@ def RBF_NN(n_nodes, sin_or_square="sin", std = 1, ls_or_delta = 'ls', eta = 0.01
         
 
     mu_vec = np.linspace(mu_range[0], mu_range[1], rbf.node_count)
-    np.random.uniform(low=mu_range[0], high=mu_range[1], size=rbf.node_count)
-        
-    if rand_std:    
-        std_vec = std*np.random.rand(rbf.node_count)
-    else:
-        std_vec = std*np.ones((1,rbf.node_count))
     
+    mu_vec = mu_vec.reshape(len(mu_vec),-1)
+    x_train = x_train.reshape(len(x_train),-1)
+    x_test = x_test.reshape(len(x_test),-1)
+    #mu_vec = np.random.uniform(low=mu_range[0], high=mu_range[1], size=rbf.node_count)
+        
+   
     # Build phi arrays
-    phi_train = rbf.build_phi(x_train, mu_vec, std_vec)
-    phi_test = rbf.build_phi(x_test, mu_vec, std_vec)  
+    phi_train = rbf.build_phi(x_train, mu_vec, std)
+    phi_test = rbf.build_phi(x_test, mu_vec, std)  
     
     if ls_or_delta == 'ls': 
         # Call least squares functoin to calc ls weights
         w = rbf.least_squares(phi_train, f_train)#.reshape(-1,1)
     
     elif ls_or_delta == 'delta':
-        w = rbf.delta_learning(f_train, phi_train, epochs, plot_result_per_epoch = False, f_test = f_test, phi_test = phi_test)
+        w = rbf.delta_learning(f_train, phi_train, epochs, plot_result_per_epoch = False, f_test = f_test, phi_test = phi_test, randomize_samples=True)
         # Flatten w to 1-D for dot product
         w = w.flatten()    
 
@@ -114,20 +114,21 @@ def RBF_NN(n_nodes, sin_or_square="sin", std = 1, ls_or_delta = 'ls', eta = 0.01
     return ARE_test
 
 if __name__ == "__main__":
-    
     '''
-    etas = np.linspace(0, 1, 100)
+    etas = np.linspace(0, 1, 100)[1:]
     results = []
+    epochs=100
     for e in etas:
-        results.append(RBF_NN(60, sin_or_square="square", std = 0.03, eta = e, ls_or_delta = 'delta', epochs=100, add_noise = True, rand_std=True, plot=False, verbose=False))
+        results.append(RBF_NN(50, sin_or_square="square", std = 0.08, eta = e, ls_or_delta = 'delta', epochs=epochs, add_noise = True, rand_std=False, plot=False, verbose=False))
     #print(results)
-    
+    title_txt = "Error over the test set epochs=" + str(epochs)
+    plt.title(title_txt)
     plt.plot(etas, results)
     plt.xlabel('Learning rate')
     plt.ylabel('ARE')
     plt.show()
     '''
-    '''
+    
     ls_error = np.Infinity
     ls_sigma = 0
     ls_nodes = 0
@@ -140,12 +141,12 @@ if __name__ == "__main__":
         print(sigmas)
         for nodes in nodes_list:#[10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80]:
             print("Sigma " + str(sigma) + ". Nodes " + str(nodes) + "\n")
-            #err1 = RBF_NN(nodes, sin_or_square="square", std = sigma, ls_or_delta = 'ls', epochs=100, add_noise = True, rand_std=False, plot=False, verbose=False)
+            err1 = RBF_NN(nodes, sin_or_square="square", std = sigma, ls_or_delta = 'ls', epochs=100, add_noise = True, rand_std=False, plot=False, verbose=False)
             if err1 < ls_error:
                 ls_error = err1
                 ls_sigma = sigma
                 ls_nodes = nodes
-            #print(err1)
+            print(err1)
             print("\n")
             err2 = RBF_NN(nodes, sin_or_square="sin", std = sigma, ls_or_delta = 'delta', eta = 0.01, epochs=100, add_noise = True, rand_std=False, plot=False, verbose=False)
             if err2 < delta_error:
@@ -156,5 +157,6 @@ if __name__ == "__main__":
             print("\n---------------------------------")
     print("Sigma " + str(ls_sigma) + ". Nodes " + str(ls_nodes) + " Error "+ str(ls_error))
     print("Sigma " + str(delta_sigma) + ". Nodes " + str(delta_nodes) + " Error "+ str(delta_error))
-    '''
-    print(RBF_NN(55, sin_or_square="sin", std = 0.7145, ls_or_delta = 'delta', eta = 0.01, epochs=100, add_noise = True, rand_std=False, plot=False, verbose=False))
+
+    #print(RBF_NN(55, sin_or_square="sin", std = 0.7145, ls_or_delta = 'delta', eta = 0.01, epochs=100, add_noise = True, rand_std=False, plot=False, verbose=False))
+    
