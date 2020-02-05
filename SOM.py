@@ -27,7 +27,6 @@ def get_best_matching_neuron(weights, sample):
     best_matching_neuron = np.argmin(distances) 
     return best_matching_neuron
 
-
 def SOM_train(dataset, n_nodes=100, n_epochs = 20, initial_neighbourhood_size=50, circular_offset=False, learning_rate=0.2, exp_descrease=False, alpha=0.5):
     dimension_dataset = dataset.shape[1]
     
@@ -38,7 +37,6 @@ def SOM_train(dataset, n_nodes=100, n_epochs = 20, initial_neighbourhood_size=50
         for sample in dataset:
             best_matching_neuron = get_best_matching_neuron(weights, sample)
             offset = initial_neighbourhood_size - int(np.round((epoch+1)/n_epochs*(initial_neighbourhood_size)))
-            
             neighbours_indexes = get_neighbours_index(best_matching_neuron, offset, n_nodes, circular_offset=circular_offset)
             weights[neighbours_indexes, :] += current_lr*(sample - weights[neighbours_indexes,:])
         if exp_descrease:
