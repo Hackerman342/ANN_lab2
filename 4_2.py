@@ -7,6 +7,7 @@ Created on Sun Feb  2 23:04:52 2020
 import numpy as np
 from SOM import SOM_train
 import matplotlib.pyplot as plt
+import SOM
 
 def get_cities_dataset(N_CITIES=10, COL=2):
     f=open("data/cities.dat", "r")
@@ -20,12 +21,21 @@ def get_cities_dataset(N_CITIES=10, COL=2):
         index += 1
     return cities_coord
 
-def plot_path(dataset, W):
+def sort_cities(weights, cities_dataset):
+    
+    cities_indexes_dict = {}
+    n_cities = cities_dataset.shape[0]
+    for city_index in range(n_cities):
+        nearest_idx = SOM.get_best_matching_neuron(weights, cities_dataset[city_index, :])
+        cities_indexes_dict[city_index] = nearest_idx
+        
+    sorted_cities_index = dict(sorted(cities_indexes_dict.items(), key=lambda item: item[1]))
+    return sorted_cities_index.keys()
+
+def plot_path(dataset, ordered_cities):
     coords = []
-    for city in range(dataset.shape[0]):
-        distances = np.sum(np.square(W - dataset[city, :]), axis = 1)
-        nearest_idx = np.argmin(distances) 
-        coords.append(W[nearest_idx,:])
+    for city_index in ordered_cities:
+        coords.append(dataset[city_index])
     coords.append(coords[0])
     coords = np.asarray(coords)
     
@@ -34,5 +44,9 @@ def plot_path(dataset, W):
 
 if __name__ == "__main__":
     cities_dataset = get_cities_dataset()
-    W = SOM_train(cities_dataset, n_epochs=100, learning_rate=0.6, exp_descrease=True, alpha=0.8, circular_offset=True, n_nodes=10, initial_neighbourhood_size=2)
-    plot_path(cities_dataset, W)
+    cities_dataset[0, 0] = 0.8
+    cities_dataset[0, 1] = 0.5
+    print(cities_dataset)
+    W = SOM_train(cities_dataset, n_epochs=20, learning_rate=0.2, exp_descrease=False, alpha=1, circular_offset=True, n_nodes=10, initial_neighbourhood_size=2)
+    sorted_cities = sort_cities(W, cities_dataset)
+    plot_path(cities_dataset, sorted_cities)
