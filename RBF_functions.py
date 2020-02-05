@@ -39,14 +39,19 @@ class RadialBasisFunctions():
         return x, sin, square
     
     
-    def build_phi(self, x, mu_vec, std_vec):
-        # x is size 1xN | mu_vec & std_vec are size 1xn
-        # Reshape all input vectors to Nxn arrays
-        x_arr = np.repeat(x.reshape(-1,1),mu_vec.size,axis=1)
-        mu_arr = np.repeat(mu_vec.reshape(1,-1),x.size,axis=0)
-        std_arr = np.repeat(std_vec.reshape(1,-1),x.size,axis=0)       
-        # Calculate array of transfer functions for all combos of x & mu+std
-        phi = self.gauss_transfer_function(x_arr, mu_arr, std_arr)
+    def build_phi(self, x, mu_RBF, std):
+        """
+        @param x: rows = number of training samples, columns = dimensions of input data 
+        @param mu_RBF: rows = number of RBF nodes, columns = dimensions of input data
+        @param std: decimal number 
+        @return phi: rows = number of training samples, columns = number of RBF nodes
+        """
+        n_training_samples = len(x)
+        n_RBF_nodes = len(mu_RBF)
+        phi = np.zeros((n_training_samples,n_RBF_nodes))
+        for idx_rbf_node in range(n_RBF_nodes):
+            # Calculate array of transfer functions for all combos of x & mu+std
+            phi[:,idx_rbf_node] = self.gauss_transfer_function(x, mu_RBF[idx_rbf_node], std)
         return phi        
     
     
@@ -135,18 +140,25 @@ class RadialBasisFunctions():
         mu_vec[idx_winning_rbf] += self.lr*(x_train_point - mu_vec[idx_winning_rbf])
         return mu_vec
  
-    
-    def compute_euclidean_distance(self, x, mu):
-        sqrt_term = np.sum(np.square(x-mu))
-        euclidean_distance = np.sqrt(sqrt_term)
-        return euclidean_distance
         
     
-    def gauss_transfer_function(self, x, mu, std):
+    def gauss_transfer_function(self, x, mu_RBF_node, std):
+        """
+        @param x: rows = number of training samples, columns = dimensions of input data 
+        @param mu_RBF_node: vector with length = dimensions of input data
+        @param std: decimal number 
+        @return vector with the gaussian transfer function of each training point to the RBF node (length=number of training samples)
+        """
         # square euclidean distance 
-        r_square = np.square(self.compute_euclidean_distance(x, mu))
-        return np.exp(-1*np.divide(r_square,(2*np.square(std))))
+        r_square = np.square(self.compute_euclidean_distance(x, mu_RBF_node))
+        gauss_transfer_function_train_samples = np.exp(-1*np.divide(r_square,(2*np.square(std))))
+        return gauss_transfer_function_train_samples
     
+    
+    def compute_euclidean_distance(self, x, mu_RBF_node):
+        sqrt_term = np.sum(np.square(x-mu_RBF_node), axis = 1)
+        euclidean_distance = np.sqrt(sqrt_term)
+        return euclidean_distance
     
     # Calculate mean square error between function and its approximation
     def MSE(self, f, f_hat):
