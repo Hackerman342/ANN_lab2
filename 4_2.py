@@ -38,15 +38,12 @@ def plot_path(dataset, ordered_cities):
         coords.append(dataset[city_index])
     coords.append(coords[0])
     coords = np.asarray(coords)
-    
+    plt.title("Minimum path among cities")
     plt.scatter(dataset[:,0], dataset[:,1], marker='x', color='red')
     plt.plot(coords[:,0],coords[:,1], color='blue')
 
 if __name__ == "__main__":
     cities_dataset = get_cities_dataset()
-    cities_dataset[0, 0] = 0.8
-    cities_dataset[0, 1] = 0.5
-    print(cities_dataset)
     W = SOM_train(cities_dataset, n_epochs=20, learning_rate=0.2, exp_descrease=False, alpha=1, circular_offset=True, n_nodes=10, initial_neighbourhood_size=2)
     sorted_cities = sort_cities(W, cities_dataset)
     plot_path(cities_dataset, sorted_cities)
