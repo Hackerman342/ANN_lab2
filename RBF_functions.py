@@ -117,8 +117,8 @@ class RadialBasisFunctions():
         dw = self.lr*(error)*phi_x.reshape(-1,1)
         return dw
     
-    
-    def competitive_learning_1D(self, x_train, mu_vec, n_epochs=100):
+    """
+    def competitive_learning(self, x_train, mu_vec, n_epochs=100):
         for epoch in range(n_epochs):
             rand_ids = np.random.permutation(x_train.size)     
             # limit number of iterations??
@@ -128,9 +128,12 @@ class RadialBasisFunctions():
                 mu_vec =  self.update_mu_CL(x_train[idx_training_sample], mu_vec)
                 
         return mu_vec
-    
+    """
     
     def update_mu_CL(self, x_train_point, mu_vec):
+        """
+        Update the mu of the winning RBF node (the one most near x_training_point)
+        """
         # Find index of closest mu (gaussian center) a.k.a. the 'winner'
         
         # euclidean distance 1D
