@@ -17,10 +17,10 @@ import random
 
 class RadialBasisFunctions():
     
-    def __init__(self, node_count):
+    def __init__(self, node_count, lr=0.01):
         # Initilize class variables
         self.node_count = node_count
-        self.lr = .01
+        self.lr = lr
     
     # Generates a sin wave and square wave over specified interval
     def generate_sin_and_square(self, xrange, step):

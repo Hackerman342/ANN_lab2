@@ -6,48 +6,26 @@ Created on Tue Jan 28 15:35:36 2020
 """
 
 # Import package dependencies
-import sys
 import math
 import numpy as np 
 import matplotlib.pyplot as plt
-from mpl_toolkits import mplot3d
-
+import time 
 # Import necessary classes from script with functions
 from RBF_functions import RadialBasisFunctions
 
 np.random.seed(123)
 
 
-def RBF_NN(n_nodes, sin_or_square="sin", std = 1, ls_or_delta = 'ls', eta = 0.01, epochs=100, add_noise = False, rand_std=False, plot=False, verbose=True):
-    rbf = RadialBasisFunctions(n_nodes)
+def RBF_NN(n_nodes, sin_or_square="sin", std = 1, ls_or_delta = 'ls', eta = 0.01, epochs=100, add_noise = False, plot_train=False, plot_test = True, verbose=True, plot_mu_rbf=True):
+    rbf = RadialBasisFunctions(n_nodes,eta)
     # Set parameters for RBF
     mu_range = [0, round(2*math.pi,1)]
-    #std = 0.08
-    rbf.lr = eta
-    #epochs = 100
-    
-    # Set which input function to approximate
-    #sin_or_square = 'sin'
-    #sin_or_square = 'square'
-    
-    # Set which input function to approximate
-    #ls_or_delta = 'ls'
-    #ls_or_delta = 'delta'
-    
-    # Boolean for whether or not to use random standard deviations
-    #rand_std = True
-    #rand_std = False    
-    
-    # Boolean for whether or not to add gaussian noise
-    #add_noise = True
-    #add_noise = False
     
     # Set parameters for data
     train_range = [0 , 2*math.pi]
     test_range = [0.05 , 2*math.pi + 0.05]
     step = 0.1
 
-    
     # Call functions to generate train and test dataseta
     x_train, sin_train, square_train = rbf.generate_sin_and_square(train_range,step)
     x_test, sin_test, square_test = rbf.generate_sin_and_square(test_range,step)
@@ -81,18 +59,22 @@ def RBF_NN(n_nodes, sin_or_square="sin", std = 1, ls_or_delta = 'ls', eta = 0.01
     phi_train = rbf.build_phi(x_train, mu_vec, std)
     phi_test = rbf.build_phi(x_test, mu_vec, std)  
     
+    start_time = time.time()
     if ls_or_delta == 'ls': 
         # Call least squares functoin to calc ls weights
         w = rbf.least_squares(phi_train, f_train)#.reshape(-1,1)
     
+
     elif ls_or_delta == 'delta':
-        w = rbf.delta_learning(f_train, phi_train, epochs, plot_result_per_epoch = False, f_test = f_test, phi_test = phi_test, randomize_samples=True)
+        w = rbf.delta_learning(f_train, phi_train, epochs, f_test = f_test, phi_test = phi_test, randomize_samples=True)
         # Flatten w to 1-D for dot product
         w = w.flatten()    
+    print("--- %s seconds ---" % (time.time() - start_time))
 
     # Calculate predicted outputs
     fhat_train = np.dot(phi_train, w)
     fhat_test = np.dot(phi_test, w)
+    
     
     # Measure absolute residual error
     ARE_train = rbf.ARE(f_train, fhat_train)
@@ -100,35 +82,145 @@ def RBF_NN(n_nodes, sin_or_square="sin", std = 1, ls_or_delta = 'ls', eta = 0.01
     if verbose:
         print("Training ARE: ", ARE_train)
         print("Training visual fit")
-    if plot:
-        plt.plot(x_train,f_train)
-        plt.plot(x_train,fhat_train)
-        plt.show()
-    if verbose:
         print("Testing ARE: ", ARE_test)
         print("Testing visual fit")
-    if plot:
-        plt.plot(x_test,f_test)
-        plt.plot(x_test,fhat_test)
+    if plot_train:
+        plt.plot(x_train,f_train,'k',label='Real')
+        plt.plot(x_train,fhat_train, '--c', label='Predicted')
+        plt.legend()
+        text_title = str(n_nodes) + " hidden nodes over train data"
+        plt.title(text_title)
         plt.show()
+        
+    if plot_test:
+        plt.plot(x_test,f_test,'k',label='Real')
+        plt.plot(x_test,fhat_test, '--c', label='Predicted')
+        if plot_mu_rbf:
+            plt.scatter(mu_vec.reshape(-1,), np.zeros(len(mu_vec)), marker="x", c="r", label="RBF centers")
+        plt.legend()
+        text_title = str(n_nodes) + " hidden nodes over test data"
+        plt.title(text_title)
+        plt.show()
+        
     return ARE_test
 
+
+ """
+    #### Batch learning with noise 
+    n_nodes=6
+    RBF_NN(n_nodes, sin_or_square="sin", std = 1, ls_or_delta = 'ls', epochs=100, add_noise = True, plot_train=True, plot_test = True)
+
+    n_nodes=8
+    RBF_NN(n_nodes, sin_or_square="sin", std = 1, ls_or_delta = 'ls', epochs=100, add_noise = True, plot_train=True, plot_test = True)
+
+    n_nodes=11
+    RBF_NN(n_nodes, sin_or_square="sin", std = 1, ls_or_delta = 'ls', epochs=100, add_noise = True, plot_train=True, plot_test = True)
+    
+    n_nodes=50
+    RBF_NN(n_nodes, sin_or_square="square", std =0.08, ls_or_delta = 'ls', epochs=100, add_noise = True, plot_train=True, plot_test = True)
+   
+a = []
+b = []
+c = []
+
+for i in range(30):    
+    #### Online learning without noise 
+    n_nodes=6
+    a.append(RBF_NN(n_nodes, sin_or_square="sin", std = 1, ls_or_delta = 'delta', epochs=100000, add_noise = False, plot_train=False, plot_test = False, verbose=False))
+
+    n_nodes=8
+    b.append(RBF_NN(n_nodes, sin_or_square="sin", std = 1, ls_or_delta = 'delta', epochs=100000, add_noise = False, plot_train=False, plot_test = False, verbose=False))
+
+    n_nodes=11
+    c.append(RBF_NN(n_nodes, sin_or_square="sin", std = 1, ls_or_delta = 'delta', epochs=100000, add_noise = False, plot_train=False, plot_test = False, verbose=False))
+    
+
+a = np.array(a)
+np.mean(a)
+np.std(a)
+
+b = np.array(b)
+np.mean(b)
+np.std(b)
+
+c = np.array(c)
+np.mean(c)
+np.std(c)
+
+
+    n_nodes=80
+    RBF_NN(n_nodes, sin_or_square="sin", std = 1, ls_or_delta = 'delta', epochs=100, add_noise = False, plot_train=True, plot_test = True)
+    
+
+    n_nodes=6
+    RBF_NN(n_nodes, sin_or_square="sin", std = 1, ls_or_delta = 'delta', epochs=100000, add_noise = False, plot_train=True, plot_test = True)
+
+    n_nodes=8
+    RBF_NN(n_nodes, sin_or_square="sin", std = 1, ls_or_delta = 'delta', epochs=100000, add_noise = False, plot_train=True, plot_test = True)
+
+    
+    n_nodes=11
+    RBF_NN(n_nodes, sin_or_square="sin", std = 1, ls_or_delta = 'delta', epochs=100000, add_noise = False, plot_train=True, plot_test = True)
+    
+    
+
+
+    #### Online learning with noise    
+    n_nodes=6
+    RBF_NN(n_nodes, sin_or_square="sin", std = 1, ls_or_delta = 'delta', epochs=100, add_noise = True, plot_train=True, plot_test = True)
+
+    n_nodes=8
+    RBF_NN(n_nodes, sin_or_square="sin", std = 1, ls_or_delta = 'delta', epochs=100, add_noise = True, plot_train=True, plot_test = True)
+
+    n_nodes=11
+    RBF_NN(n_nodes, sin_or_square="sin", std = 1, ls_or_delta = 'delta', epochs=100, add_noise = True, plot_train=True, plot_test = True)
+    
+    n_nodes=50
+    RBF_NN(n_nodes, sin_or_square="square", std =0.08, ls_or_delta = 'delta', epochs=100, add_noise = True, plot_train=True, plot_test = True)
+
+    n_nodes=6
+    RBF_NN(n_nodes, sin_or_square="sin", std = 1, ls_or_delta = 'delta', epochs=100000, add_noise = True, plot_train=True, plot_test = True)
+
+    n_nodes=8
+    RBF_NN(n_nodes, sin_or_square="sin", std = 1, ls_or_delta = 'delta', epochs=100000, add_noise = True, plot_train=True, plot_test = True)
+
+    n_nodes=11
+    RBF_NN(n_nodes, sin_or_square="sin", std = 1, ls_or_delta = 'delta', epochs=100000, add_noise = True, plot_train=True, plot_test = True)
+    
+""" 
+
 if __name__ == "__main__":
-    '''
+  
     etas = np.linspace(0, 1, 100)[1:]
     results = []
-    epochs=100
+    epochs = 1000
     for e in etas:
-        results.append(RBF_NN(50, sin_or_square="square", std = 0.08, eta = e, ls_or_delta = 'delta', epochs=epochs, add_noise = True, rand_std=False, plot=False, verbose=False))
+        results.append(RBF_NN(11, sin_or_square="sin", std = 1, eta = e, ls_or_delta = 'delta', epochs=epochs, add_noise = True, plot_test=False, verbose=False))
     #print(results)
     title_txt = "Error over the test set epochs=" + str(epochs)
     plt.title(title_txt)
-    plt.plot(etas, results)
+    #plt.plot(etas, results)
+    a=results[:73]
+    plt.plot(etas[:73], a, "c")
     plt.xlabel('Learning rate')
     plt.ylabel('ARE')
     plt.show()
-    '''
     
+    mas_epochs = a 
+    results = []
+    for e in etas:
+        results.append(RBF_NN(11, sin_or_square="sin", std = 1, eta = e, ls_or_delta = 'delta', epochs=100, add_noise = True, plot_test=False, verbose=False))
+    a=results[:73]
+    title_txt = "Error over the test set with delta learning"
+    plt.title(title_txt)
+    plt.plot(etas[:73], a, "k", label="epochs=100")
+    plt.plot(etas[:73], mas_epochs, "--c", label="epochs=1000")
+    plt.xlabel('Learning rate')
+    plt.ylabel('ARE')
+    plt.legend()
+    plt.show()
+    
+    """
     ls_error = np.Infinity
     ls_sigma = 0
     ls_nodes = 0
@@ -159,4 +251,4 @@ if __name__ == "__main__":
     print("Sigma " + str(delta_sigma) + ". Nodes " + str(delta_nodes) + " Error "+ str(delta_error))
 
     #print(RBF_NN(55, sin_or_square="sin", std = 0.7145, ls_or_delta = 'delta', eta = 0.01, epochs=100, add_noise = True, rand_std=False, plot=False, verbose=False))
-    
+    """

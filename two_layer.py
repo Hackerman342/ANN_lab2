@@ -10,7 +10,7 @@ from mpl_toolkits import mplot3d
 import math
 import sys
 from RBF_functions import RadialBasisFunctions
-
+import time 
 
 # Import other project scripts/functions
 #from lab1 import generate_data
@@ -375,6 +375,8 @@ class TwoLayer():
         if not self.function_approx:
             # Do not track misclassiifed points for function mode
             self.misclass = np.zeros(epochs)
+        
+        start_time = time.time()
 
         # Run optimization
         for i in range(epochs):
@@ -443,7 +445,7 @@ class TwoLayer():
                 W += dw*l_rate
 
             # Update performance metrics
-            self.MSE[i] = np.mean(np.square(Y-out))
+            self.MSE[i] = np.mean(np.abs(Y-out))
             if self.classifier:
                 self.misclass[i] = sum(np.multiply(Y,out.reshape(out.size,))<0)
             if self.autoencoder:
@@ -463,6 +465,8 @@ class TwoLayer():
                     self.encode_plot(X, out, i)
                 if self.function_approx:
                     self.func_plot(X, out, i)
+
+        print("--- %s seconds ---" % (time.time() - start_time))
 
         # Final results plots
         plt.plot(self.MSE)
@@ -534,6 +538,8 @@ class TwoLayer():
             self.misclass = np.zeros(epochs)
             self.misclass_test = np.zeros(epochs)
 
+        start_time = time.time()
+     
         # Run optimization
         for i in range(epochs):
 
@@ -575,7 +581,6 @@ class TwoLayer():
                     W += dw*l_rate
 
             else: # Batch update
-
                 # Forward pass
                 # Layer 1
                 hin = np.dot(V,X)
@@ -601,7 +606,7 @@ class TwoLayer():
                 W += dw*l_rate
 
             # Update training performance metrics
-            self.MSE[i] = np.mean(np.square(Y-out))
+            self.MSE[i] = np.mean(np.abs(Y-out))
             hin_test = np.dot(V,X_test)
             hout_test = self.centered_sigmoid(hin_test)
             # Add bias row to hout
@@ -610,13 +615,16 @@ class TwoLayer():
             oin_test = np.dot(W,hout_test)
             out_test = self.centered_sigmoid(oin_test)
             
-            self.MSE_test[i] = np.mean(np.square(Y_test-out_test))
-
+            #self.MSE_test[i] = np.mean(np.square(Y_test-out_test))
+            self.MSE_test[i] = np.mean(np.abs(Y_test-out_test))
             if self.classifier:
                 self.misclass[i] = sum(np.multiply(Y,out.reshape(out.size,))<0)
 
 
+            
+        print("--- %s seconds ---" % (time.time() - start_time))
 
+    
         hin_test = np.dot(V,X_test)
         hout_test = self.centered_sigmoid(hin_test)
         # Add bias row to hout
@@ -633,7 +641,7 @@ class TwoLayer():
         plt.xlabel("epoch")
         plt.show()
         plt.plot(self.MSE_test)
-        plt.title("Validation Mean Square error")
+        plt.title("Test Mean Absolute error")
         plt.xlabel("epoch")
         plt.show()
         if not self.function_approx:
@@ -645,17 +653,19 @@ class TwoLayer():
             plt.title("Validation Misclassified points")
             plt.xlabel("epoch")
             plt.show()
-
+        print("Train error: "+ str(self.MSE[-1]))
+        print("Test error: "+ str(self.MSE_test[-1]))
 
 if __name__ == "__main__":
+    n_nodes = 50
     
     # Initialize class
     multi = TwoLayer()
-    multi.h_nodes = 55
+    multi.h_nodes = n_nodes
     train_range = [0 , 2*math.pi]
     test_range = [0.05 , 2*math.pi + 0.05]
     
-    rbf = RadialBasisFunctions(55)
+    rbf = RadialBasisFunctions(n_nodes)
     step = 0.1
     
     x_train, sin_train, square_train = rbf.generate_sin_and_square(train_range,step)
