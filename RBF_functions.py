@@ -64,7 +64,7 @@ class RadialBasisFunctions():
     
     def delta_learning(self, f_train, phi_train, epochs, plot_result_per_epoch = False, f_test = None, phi_test = None, randomize_samples=False):
         # initialize random weights as column
-        w = np.random.randn(self.node_count).reshape(-1,1)
+        w = np.random.randn(self.node_count, f_train.shape[1]).reshape(-1,f_train.shape[1])
         # Choose random order of points for weight update 
         # Initialize vectors for storing errors
         ARE_train = np.zeros(epochs)
@@ -72,12 +72,14 @@ class RadialBasisFunctions():
         # Iteratively call delta rule function and update weights
         for i in range(epochs):
             if randomize_samples:
-                rand_ids = np.random.permutation(f_train.size)     
+                rand_ids = np.random.permutation(f_train.shape[0])     
             else:
-                rand_ids = range(f_train.size)
+                rand_ids = range(f_train.shape[0])
                 
             for idx_training_point in rand_ids:
-                w += self.delta_rule(f_train[idx_training_point], w, phi_train[idx_training_point])
+                f_point = f_train[idx_training_point]
+                f_point= f_point.reshape(1,-1)
+                w += self.delta_rule(f_point, w, phi_train[idx_training_point])
             
             if plot_result_per_epoch:
                 # Flatten w to 1-D for dot product - just used for ARE trend/plot
@@ -108,8 +110,8 @@ class RadialBasisFunctions():
         
         @return column vector with the updated weights of each RBF node
         """
-    
-        if f_point.size != 1:
+        
+        if f_point.shape[0] != 1:
             raise Exception("Only pass one point at at time to delta_rule func")
         
         # Calculate weight updates (column vector)
@@ -130,17 +132,17 @@ class RadialBasisFunctions():
         return mu_vec
     """
     
-    def update_mu_CL(self, x_train_point, mu_vec):
+    def update_mu_CL(self, x_train_point, mu_vec, n_winners):
         """
         Update the mu of the winning RBF node (the one most near x_training_point)
         """
         # Find index of closest mu (gaussian center) a.k.a. the 'winner'
         
         # euclidean distance 1D
-        idx_winning_rbf = np.argmin(self.compute_euclidean_distance(x_train_point, mu_vec))
-        
+        idx_winning_rbf = np.argsort(self.compute_euclidean_distance(x_train_point, mu_vec))[:n_winners]
         # Update winner [shift towards x]
-        mu_vec[idx_winning_rbf] += self.lr*(x_train_point - mu_vec[idx_winning_rbf])
+        lr_exp = np.arange(1, n_winners + 1, 1)
+        mu_vec[idx_winning_rbf] += np.power(self.lr, lr_exp)[:, None]*(x_train_point - mu_vec[idx_winning_rbf])
         return mu_vec
  
         

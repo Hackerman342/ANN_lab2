@@ -18,30 +18,41 @@ from RBF_functions import RadialBasisFunctions
 
 NORMALIZATION_TERM = 6.2
 
+
+def get_ballist_dataset():
+    f=open("data/ballist.dat", "r")
+    training_lines = f.readlines()
+    input_train = []
+    output_train = []
+    for point in training_lines:
+        attributes = point.replace('\t', ' ').split(' ')
+        input_train.append([float(attributes[0]), float(attributes[1])])
+        output_train.append([float(attributes[2]), float(attributes[3])])
+        
+    f=open("data/balltest.dat", "r")
+    test_lines = f.readlines()
+    input_test = []
+    output_test = []
+    for point in test_lines:
+        attributes = point.replace('\t', ' ').split(' ')
+        input_test.append([float(attributes[0]), float(attributes[1])])
+        output_test.append([float(attributes[2]), float(attributes[3])])
+        
+        
+    return np.array(input_train), np.array(output_train), np.array(input_test), np.array(output_test)
+
+
 def initialize_rbf_parameters(rbf, x_train, initialize_from_data_points=True, do_linespace=False, mu_range=[0,2*math.pi]):
     if initialize_from_data_points:
-        idx_points_for_mu = np.random.choice(len(x_train), n_hidden_nodes)    
+        idx_points_for_mu = np.random.choice(len(x_train),rbf.node_count)  
         # this should be randomly depending on n_nodes
-        idx_points_for_mu = np.array([13, 59, 61, 44,  9, 43, 20, 55, 24, 46, 32])
+        #idx_points_for_mu = np.array([13, 59, 61, 44,  9, 43, 20, 55])
         mu_vec_init = x_train[idx_points_for_mu]
     elif do_linespace:
         mu_vec_init = np.linspace(mu_range[0], mu_range[1],rbf.node_count)
     
     return mu_vec_init
 
-"""
- def competitive_learning_1D(self, x_train, mu_vec, n_epochs=100):
-        for epoch in range(n_epochs):
-            rand_ids = np.random.permutation(x_train.size)     
-            # limit number of iterations??
-            for iteration_training_point in range(len(rand_ids)):
-                # idx_training_sample = random.randint(0,len(x_train)-1)
-                idx_training_sample = rand_ids[iteration_training_point]
-                mu_vec =  self.update_mu_CL(x_train[idx_training_sample], mu_vec)
-                
-        return mu_vec
-
-"""
 
 def get_NN_predictions(rbf, x_train, f_train, f_test, x_test, mu_vec, std_vec, epochs_NN):
     # Build phi arrays
@@ -49,62 +60,14 @@ def get_NN_predictions(rbf, x_train, f_train, f_test, x_test, mu_vec, std_vec, e
     phi_test = rbf.build_phi(x_test, mu_vec, std_vec)  
         
     w = rbf.delta_learning(f_train, phi_train, epochs_NN, f_test = f_test, phi_test = phi_test, plot_result_per_epoch=False)
-        
+    w = w.reshape(-1, f_train.shape[1])
     # Calculate predicted outputs
     fhat_train = np.dot(phi_train, w)
     fhat_test = np.dot(phi_test, w)
 
     return fhat_train, fhat_test
 
-
-
-def get_results_with_CL(rbf, n_iterations, x_train, x_test, f_train, f_test, mu_vec, std_vec, epochs_NN, plot_results=False):
-    ARE_train_list = [] 
-    ARE_test_list =  []
-    for iteration in range(n_iterations):
-        """rand_ids = np.random.permutation(x_train.size)
-        for iteration_training_point in range(len(rand_ids)):
-            # idx_training_sample = random.randint(0,len(x_train)-1)
-            idx_training_sample = rand_ids[iteration_training_point]
-            mu_vec =  rbf.update_mu_CL(x_train[idx_training_sample], mu_vec)
-        """
-        # Without shuffling the training data in each epoch 
-        for idx_training_sample in range(len(x_train)):
-            # idx_training_sample = random.randint(0,len(x_train)-1)
-            mu_vec = rbf.update_mu_CL(x_train[idx_training_sample], mu_vec)
-        
-        
-        """fhat_train, fhat_test = get_NN_predictions(rbf, x_train, f_train, f_test, x_test, mu_vec, std_vec, epochs_NN)
-        ARE_train = rbf.ARE(f_train, fhat_train)
-        ARE_test = rbf.ARE(f_test, fhat_test)
-        ARE_train_list.append(ARE_train)
-        ARE_test_list.append(ARE_test)"""
-        #print("Training ARE: ", ARE_train)      
-        #print("---ITERATION: " + str(iteration) + "---")
-        """idx_training_sample = random.randint(0,len(x_train)-1) 
-        mu_vec =  rbf.update_mu_CL(x_train[idx_training_sample], mu_vec)"""
-        if iteration%100==0:
-            fhat_train, fhat_test = get_NN_predictions(rbf, x_train, f_train, f_test, x_test, mu_vec, std_vec, epochs_NN)
-            ARE_train = rbf.ARE(f_train, fhat_train)
-            ARE_test = rbf.ARE(f_test, fhat_test)
-            ARE_train_list.append(ARE_train)
-            ARE_test_list.append(ARE_test)
-        #print("Training ARE: ", ARE_train)
-        #print("Testing ARE: ", ARE_test)"""
-    
-    if plot_results:
-        x = range(len(ARE_train_list))
-        plt.plot(x,ARE_train_list,'k',label='Train')
-        plt.plot(x,ARE_test_list, '--c', label='Test')
-        plt.xlabel("Number iterations CL")
-        plt.ylabel("ARE")
-        plt.legend()
-        plt.show()
-    
-    
-    
-    
-
+'''
 def train_RBF_network(n_hidden_nodes, use_cl, std = 1, learning_rate = .1, epochs_NN = 100, epochs_CL=100, sin_or_square = 'sin', initialize_from_data_points=True, add_noise = False, do_linespace=False, mu_range=[None,None], mu_vec_init=None, plot_results=True, normalize_training_data=True):
     
     # Initialize class w/ node count
@@ -179,7 +142,7 @@ def train_RBF_network(n_hidden_nodes, use_cl, std = 1, learning_rate = .1, epoch
         
         
     #return ARE_train,ARE_test
-    
+''' 
     
     
     
@@ -188,7 +151,7 @@ def train_RBF_network(n_hidden_nodes, use_cl, std = 1, learning_rate = .1, epoch
    
     
 
-def train_RBF_network_op2(n_hidden_nodes, use_cl, std = 1, learning_rate = .1, epochs_NN = 100, epochs_CL=10000, sin_or_square = 'sin', initialize_from_data_points=True, add_noise = False, do_linespace=False, mu_range=[None,None], mu_vec_init=None, plot_results=True, normalize_training_data=True):
+def train_RBF_network_op2(n_hidden_nodes, use_cl, std = 1, learning_rate = .1, epochs_NN = 100, n_iterations_CL=1000, epochs_CL=10000, sin_or_square = 'sin', initialize_from_data_points=True, add_noise = False, do_linespace=False, mu_range=[None,None], mu_vec_init=None, plot_results=True, normalize_training_data=False):
     
     # Initialize class w/ node count
     rbf = RadialBasisFunctions(n_hidden_nodes)
@@ -230,45 +193,56 @@ def train_RBF_network_op2(n_hidden_nodes, use_cl, std = 1, learning_rate = .1, e
     
     mu_vec = mu_vec_init.copy()
     
-          
-    n_iterations=10000
-    get_results_with_CL_op2(rbf, n_iterations, x_train, x_test, f_train, f_test, mu_vec, std, epochs_NN, plot_results=True)
-        
+    print(mu_vec.shape)
+    
+    mu_vec = get_results_with_CL_op2(rbf, n_iterations_CL, x_train, x_test, f_train, f_test, mu_vec, std, epochs_NN, plot_results=True)
+    
+    
+    
     #return ARE_train,ARE_test
         
   
 
 
-def get_results_with_CL_op2(rbf, epochs_CL, x_train, x_test, f_train, f_test, mu_vec, std, epochs_NN, plot_results=False):
+def get_results_with_CL_op2(rbf, epochs_CL, x_train, x_test, f_train, f_test, mu_vec, std, epochs_NN, plot_results=False, n_winning_unities = 1):
     ARE_train_list = [] 
     ARE_test_list =  []
-    for epoch in range(epochs_CL):
+    for epoch in range(1,epochs_CL):
         indices = np.arange(x_train.shape[0])
         np.random.shuffle(indices) 
         new_x_train = x_train[indices]
         new_f_train = f_train[indices]
         
-        mu_vec =  rbf.update_mu_CL(new_x_train[0], mu_vec)
-        
+        mu_vec =  rbf.update_mu_CL(new_x_train[0], mu_vec, n_winning_unities)
+        #print(mu_vec.shape)
+        '''
         if epoch%100==0:
-            fhat_train, fhat_test = get_NN_predictions(rbf, new_x_train, new_f_train, f_test, x_test, mu_vec, std, epochs_NN=1)
+            #fhat_train, fhat_test = get_NN_predictions(rbf, new_x_train, new_f_train, f_test, x_test, mu_vec, std, epochs_NN=1000)
             
-            ARE_train = rbf.ARE(new_f_train, fhat_train)
-            ARE_test = rbf.ARE(f_test, fhat_test)
-            
-            ARE_train_list.append(ARE_train)
+            #ARE_train = rbf.ARE(new_f_train, fhat_train)
+            #ARE_test = rbf.ARE(f_test, fhat_test)
+            ARE_test = RBF_NN(rbf.node_count, mu_vec, sin_or_square="sin", std = 1, ls_or_delta = 'delta', eta = 0.01, epochs=100000, add_noise = False, rand_std=False, plot=False, verbose=False)
+            #ARE_train_list.append(ARE_train)
             ARE_test_list.append(ARE_test)
         #print("Training ARE: ", ARE_train)
-        #print("Testing ARE: ", ARE_test)"""
-    
+        #print("Testing ARE: ", ARE_test)
+        '''
+        
+    #fhat_train, fhat_test = get_NN_predictions(rbf, x_train, f_train, f_test, x_test, mu_vec, std, epochs_NN=100000)       
+    #ARE_train = rbf.ARE(f_train, fhat_train)
+    #ARE_test = RBF_NN(rbf.node_count, mu_vec, sin_or_square="sin", std = 1, ls_or_delta = 'delta', eta = 0.01, epochs=100000, add_noise = True, rand_std=False, plot=False, verbose=False)
+    #print(ARE_test)
+    fhat_train, fhat_test = get_NN_predictions(rbf, x_train, f_train, f_test, x_test, mu_vec, std, epochs_NN)
+    print(rbf.ARE(f_test, fhat_test))
     if plot_results:
-        x = range(len(ARE_train_list))
-        plt.plot(x,ARE_train_list,'k',label='Train')
+        x = np.array(np.arange(1, len(ARE_test_list))) * 100
+        plt.plot(x,ARE_test_list,'k',label='Train')
         plt.plot(x,ARE_test_list, '--c', label='Test')
         plt.xlabel("Number iterations CL")
         plt.ylabel("ARE")
         plt.legend()
         plt.show()
+    return mu_vec
     
     
         
@@ -285,9 +259,40 @@ if __name__ == "__main__":
 
     std = 1
     
+    rbf = RadialBasisFunctions(n_hidden_nodes)
+    rbf.lr = 0.01
     
-    train_RBF_network_op2(n_hidden_nodes, use_cl, std, plot_results=False, normalize_training_data=False)
     
+    # Generate data 
+    train_range = [0 , 2*math.pi]
+    test_range = [0.05 , 2*math.pi + 0.05]
+    step = 0.1
+    # Call functions to generate train and test dataseta
+    x_train, sin_train, square_train = rbf.generate_sin_and_square(train_range,step)
+    x_test, sin_test, square_test = rbf.generate_sin_and_square(test_range,step)
+    
+    x_train = x_train.reshape(len(x_train),-1)
+    x_test = x_test.reshape(len(x_test),-1)
+    
+    #sin_train = rbf.add_gauss_noise(sin_train, 0, 0.1)
+    #square_train = rbf.add_gauss_noise(square_train, 0, 0.1)
+    #sin_test = rbf.add_gauss_noise(sin_test, 0, 0.1)
+    #square_test = rbf.add_gauss_noise(square_test, 0, 0.1)
+    
+    f_train = sin_train.reshape(len(sin_train),-1)
+    f_test = sin_test.reshape(len(sin_test),-1)
+  
+    #x_train, f_train, x_test, f_test = get_ballist_dataset()
+    print(x_train.shape)    
+    mu_vec = initialize_rbf_parameters(rbf, x_train)
+    #mu_vec = np.random.rand()
+    epochs_CL=100000
+    epochs_NN=100000
+    #plt.scatter(mu_vec, np.zeros(len(mu_vec)))
+    mu = get_results_with_CL_op2(rbf, epochs_CL, x_train, x_test, f_train, f_test, mu_vec, std, epochs_NN, plot_results=False, n_winning_unities=3)
+    #train_RBF_network_op2(n_hidden_nodes, use_cl, std, plot_results=True, normalize_training_data=False, n_iterations_CL=10001)
+    plt.scatter(mu[:, 0], np.zeros(len(mu)))
+    #plt.scatter(np.linspace(0, 2*np.pi, 11), np.zeros(11))
     
     
     #mu_range = [0, round(2*math.pi,1)]
@@ -298,7 +303,7 @@ if __name__ == "__main__":
     #   -0.36336789])#,  0.43839091])
     
     
-    # Random mu between 0 and 2pi
+    # Random mu between 0 and 2pi§
     #mu_vec_init = np.random.uniform(low=0, high=2*math.pi, size=(rbf.node_count,))    
     #mu_vec_init = np.array([4.46506106, 0.07038114, 0.49323453, 3.47258945, 2.58994933,3.83851232, 0.71430821, 3.77674251, 4.19862989, 1.77314162, 4.7771036 ])
     # np.random.randn(rbf.node_count)
@@ -339,4 +344,5 @@ if __name__ == "__main__":
     plt.ylabel("ARE")
     plt.legend()
     plt.show()
-    ################################################"""
+    ################################################
+    """
