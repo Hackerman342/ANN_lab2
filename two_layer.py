@@ -10,13 +10,13 @@ from mpl_toolkits import mplot3d
 import math
 import sys
 from RBF_functions import RadialBasisFunctions
-
+import time 
 
 # Import other project scripts/functions
 #from lab1 import generate_data
 #from lab1_part2 import remove_points_class, remove_points_classA
 
-np.random.seed(123)
+#np.random.seed(123)
 
 class TwoLayer():
 
@@ -231,67 +231,16 @@ class TwoLayer():
     def centered_sigmoid(self, array):
         return (2/(1 + np.exp(-array)) - 1)
 
-    def classif_plot(self, X, out, i):
-
-        # Print performance metrics
-        print("\n ------------------- \n")
-        print("Training Data")
-        print("epoch: ", i+1)
-        print("Mean square error: ", "{0:.5f}".format(self.MSE[i]))
-        print("Misclassified points: ", self.misclass[i].astype(int))
-        print("Misclassified percentage: %", 100*self.misclass[i]/X.shape[1])
-
-        # Define binary vector for classification
-        col = out.reshape(out.size,)
-        col[col<0] = 0
-        col[col>0] = 1
-
-        # Plot classified points
-        plt.scatter(X[0],X[1], marker='x', c=col)
-        plt.show()
-
-    def classif_test_plot(self, X, out, i):
-
-        # Print performance metrics
-        print("\n ------------------- \n")
-        print("Validation Data")
-        print("epoch: ", i+1)
-        print("Mean square error: ", "{0:.5f}".format(self.MSE_test[i]))
-        print("Misclassified points: ", self.misclass_test[i].astype(int))
-        print("Misclassified percentage: %", 100*self.misclass_test[i]/X.shape[1])
-        # Define binary vector for classification
-        col = out.reshape(out.size,)
-        col[col<0] = 0
-        col[col>0] = 1
-
-        # Plot classified points
-        plt.scatter(X[0],X[1], marker='x', c=col)
-        plt.show()
 
 
-    def encode_plot(self, X, out, i):
+
+
+    def func_plot(self, X, out, Y, i):
 
         # Print performance metrics
         print("\n ------------------- \n")
         print("epoch: ", i+1)
-        print("Mean square error: ", "{0:.5f}".format(self.MSE[i]))
-        print("Misclassified points: ", self.misclass[i].astype(int))
-
-        # Define binary vector for classification
-        #col = out.reshape(out.size,)
-        #col[col<0] = 0
-        #col[col>0] = 1
-
-        # Plot classified points
-        #plt.scatter(X[0],X[1], marker='x', c=col)
-        #plt.show()
-
-    def func_plot(self, X, out, i):
-
-        # Print performance metrics
-        print("\n ------------------- \n")
-        print("epoch: ", i+1)
-        print("Mean square error: ", "{0:.5f}".format(self.MSE_test[i]))
+        print("Absolute residual error: ", "{0:.5f}".format(self.ARE_test[i]))
 
 
 
@@ -305,179 +254,15 @@ class TwoLayer():
         X = np.array(X)
         inp = X[0].reshape(1,-1)
         out = np.array(out).reshape(1,-1)
-        plt.plot(X[0], out[0])
-        
+        Y = np.array(Y).reshape(1,-1)
+        plt.plot(X[0], Y[0],'k', label='Test Data')
+        plt.plot(X[0], out[0], '--c', label='Prediction')
+        plt.legend()
         #plt.set_xlabel('x')
         #ax.set_ylabel('y')
         plt.show()
 
-    def func_plot_test_train(self, X, out, i):
 
-        # Print performance metrics
-        print("\n ------------------- \n")
-        print("epoch: ", i+1)
-        print("Mean square error: ", "{0:.5f}".format(self.MSE[i]))
-
-        # Reshape arrays for plotting
-        xx = X[0].reshape(round(sqrt(out.size)),round(sqrt(out.size)))
-        yy = X[1].reshape(round(sqrt(out.size)),round(sqrt(out.size)))
-        zz = out.reshape(round(sqrt(out.size)),round(sqrt(out.size)))
-
-        # Plot estimated surface from current model
-        print("Modeled surface plot")
-        plt.figure()
-        ax = plt.axes(projection='3d')
-        ax.plot_surface(xx,yy, zz, cmap='viridis')
-        ax.set_xlabel('x')
-        ax.set_ylabel('y')
-        ax.set_zlabel('z')
-        plt.show()
-
-    def two_layer_network(self, X, Y):
-
-        # Unpack necessary class variables
-        h_nodes = self.h_nodes
-        l_rate = self.l_rate
-        epochs = self.epochs
-        alpha = self.alpha
-        printstep = self.printstep
-
-        # Determine number of input parametrs (x) and samples (N)
-        if X.shape[0] == X.size: # X is 1-dimensional
-            x_count = 1
-            N = X.shape[0]
-        else: # X is multi-dimensional
-            x_count = X.shape[0]
-            N = X.shape[1]
-
-        # Determine number of output parametrs (y)
-        if Y.shape[0] == Y.size: # Y is 1-dimensional
-            y_count = 1
-        else: # Y is multi-dimensional
-            y_count = Y.shape[0]
-
-        # Add bias row to X
-        X = np.concatenate((X, np.ones(N).reshape(1,-1)), axis=0)
-
-        # Initialize weight matrices
-        V = np.random.randn(h_nodes, x_count+1)
-        W = np.random.randn(y_count, h_nodes+1)
-        if self.autoencoder:
-            V /= self.vars # Divide weight matrices by number of input variables
-            W /= self.vars
-
-        # Initialize weight matrix update values
-        dv = np.zeros(V.shape)
-        dw = np.zeros(W.shape)
-
-        # Initialize performance metric vectors
-        self.MSE = np.zeros(epochs)
-        if not self.function_approx:
-            # Do not track misclassiifed points for function mode
-            self.misclass = np.zeros(epochs)
-
-        # Run optimization
-        for i in range(epochs):
-
-            if self.classifier and self.sequential:
-                out = np.zeros(Y.shape)
-                for j in range(N):
-                    xj = X[:,j]
-                    if y_count > 1:
-                        yj = Y[:,j]
-                    else:
-                        yj = Y[j]
-
-
-                    # Forward pass
-                    # Layer 1
-                    hin = np.dot(V,xj)
-                    hout = self.centered_sigmoid(hin)
-                    # Add bias row to hout
-                    hout = np.append(hout, 1)
-                    # Layer 2
-                    oin = np.dot(W,hout)
-                    out[j] = self.centered_sigmoid(oin)
-
-                    # Backward pass
-                    if y_count > 1:
-                        delta_o = 0.5*np.multiply(out[j] - yj, np.multiply(1+out[j], 1-out[j]))
-                    else:
-                        delta_o = 0.5*np.multiply(out[j] - yj, np.multiply(1+out[j], 1-out[j]))
-                    delta_h = 0.5*np.multiply(np.dot(W.T,delta_o),
-                                              np.multiply(1+hout.reshape(-1,1), 1-hout.reshape(-1,1)))
-
-                    # Calculate updates for weight matrices
-                    dv = dv*alpha - np.dot(delta_h[:-1],X[:,j].reshape(1,-1))*(1-alpha)
-                    # ignore bias row of delta_h with [:-1,:]
-                    dw = dw*alpha - np.dot(delta_o.reshape(-1,1),hout.reshape(1,-1))*(1-alpha)
-
-                    # Apply updates
-                    V += dv*l_rate
-                    W += dw*l_rate
-
-            else: # Batch update
-
-                # Forward pass
-                # Layer 1
-                hin = np.dot(V,X)
-                hout = self.centered_sigmoid(hin)
-                # Add bias row to hout
-                hout = np.concatenate((hout, np.ones(N).reshape(1,-1)), axis=0)
-                # Layer 2
-                oin = np.dot(W,hout)
-                out = self.centered_sigmoid(oin)
-
-                # Backward pass
-                delta_o = 0.5*np.multiply(out - Y, np.multiply(1+out, 1-out))
-                delta_h = 0.5*np.multiply(np.dot(W.T,delta_o),
-                                          np.multiply(1+hout, 1-hout))
-
-                # Calculate updates for weight matrices
-                dv = dv*alpha - np.dot(delta_h[:-1,:],X.T)*(1-alpha)
-                # ignore bias row of delta_h with [:-1,:]
-                dw = dw*alpha - np.dot(delta_o,hout.T)*(1-alpha)
-
-                # Apply updates
-                V += dv*l_rate
-                W += dw*l_rate
-
-            # Update performance metrics
-            self.MSE[i] = np.mean(np.square(Y-out))
-            if self.classifier:
-                self.misclass[i] = sum(np.multiply(Y,out.reshape(out.size,))<0)
-            if self.autoencoder:
-                guess = np.argmax(out,axis=0)
-                self.misclass[i] = np.sum(self.enc_pos != guess)
-#                print("guess: \n", out)
-#                print("out: \n", guess)
-#                print("pos: \n", self.enc_pos)
-
-                #print(np.round(out))
-                #self.misclass[i] =
-            # Plot estimate of function and print metrics every printstep
-            if (i+1)%printstep == 0:
-                if self.classifier:
-                    self.classif_plot(X, out, i)
-                if self.autoencoder:
-                    self.encode_plot(X, out, i)
-                if self.function_approx:
-                    self.func_plot(X, out, i)
-
-        # Final results plots
-        plt.plot(self.MSE)
-        plt.title("Mean Square error")
-        plt.xlabel("epoch")
-        plt.show()
-        if not self.function_approx:
-            plt.plot(self.misclass)
-            plt.title("Misclassified points")
-            plt.xlabel("epoch")
-            plt.show()
-        if self.autoencoder:
-            print("Unique encoding (pseudo-binary representation):")
-            print(np.sign(hout[:-1]))
-            print("Error: \n", np.round(Y-out,1))
 
     def two_layer_train_test_network(self, X_train, X_test, Y_train, Y_test):
         # Call train data X & Y to avoid changing lines
@@ -527,13 +312,15 @@ class TwoLayer():
         dw = np.zeros(W.shape)
 
         # Initialize performance metric vectors
-        self.MSE = np.zeros(epochs)
-        self.MSE_test = np.zeros(epochs)
+        self.ARE = np.zeros(epochs)
+        self.ARE_test = np.zeros(epochs)
         if not self.function_approx:
             # Do not track misclassiifed points for function mode
             self.misclass = np.zeros(epochs)
             self.misclass_test = np.zeros(epochs)
 
+        start_time = time.time()
+     
         # Run optimization
         for i in range(epochs):
 
@@ -575,7 +362,6 @@ class TwoLayer():
                     W += dw*l_rate
 
             else: # Batch update
-
                 # Forward pass
                 # Layer 1
                 hin = np.dot(V,X)
@@ -601,7 +387,7 @@ class TwoLayer():
                 W += dw*l_rate
 
             # Update training performance metrics
-            self.MSE[i] = np.mean(np.square(Y-out))
+            self.ARE[i] = np.mean(np.abs(Y-out))
             hin_test = np.dot(V,X_test)
             hout_test = self.centered_sigmoid(hin_test)
             # Add bias row to hout
@@ -610,13 +396,16 @@ class TwoLayer():
             oin_test = np.dot(W,hout_test)
             out_test = self.centered_sigmoid(oin_test)
             
-            self.MSE_test[i] = np.mean(np.square(Y_test-out_test))
-
+            #self.ARE_test[i] = np.mean(np.square(Y_test-out_test))
+            self.ARE_test[i] = np.mean(np.abs(Y_test-out_test))
             if self.classifier:
                 self.misclass[i] = sum(np.multiply(Y,out.reshape(out.size,))<0)
 
 
+            
+        print("--- %s seconds ---" % (time.time() - start_time))
 
+    
         hin_test = np.dot(V,X_test)
         hout_test = self.centered_sigmoid(hin_test)
         # Add bias row to hout
@@ -626,14 +415,14 @@ class TwoLayer():
         out_test = self.centered_sigmoid(oin_test)
         #print(out_test)
         if self.function_approx:
-                    self.func_plot(X_test, out_test, i)
+                    self.func_plot(X_test, out_test, Y_test, i)
         # Final results plots
-        plt.plot(self.MSE)
-        plt.title("Training Mean Square error")
+        plt.plot(self.ARE)
+        plt.title("Training Absolute residual error")
         plt.xlabel("epoch")
         plt.show()
-        plt.plot(self.MSE_test)
-        plt.title("Validation Mean Square error")
+        plt.plot(self.ARE_test)
+        plt.title("Test Absolute residual error")
         plt.xlabel("epoch")
         plt.show()
         if not self.function_approx:
@@ -645,17 +434,20 @@ class TwoLayer():
             plt.title("Validation Misclassified points")
             plt.xlabel("epoch")
             plt.show()
-
+        print("Train error: "+ str(self.ARE[-1]))
+        print("Test error: "+ str(self.ARE_test[-1]))
 
 if __name__ == "__main__":
-    
+    n_nodes = 11
+    epochs = 30000
     # Initialize class
     multi = TwoLayer()
-    multi.h_nodes = 55
+    multi.h_nodes = n_nodes
+    multi.epochs = epochs
     train_range = [0 , 2*math.pi]
     test_range = [0.05 , 2*math.pi + 0.05]
     
-    rbf = RadialBasisFunctions(55)
+    rbf = RadialBasisFunctions(n_nodes)
     step = 0.1
     
     x_train, sin_train, square_train = rbf.generate_sin_and_square(train_range,step)
@@ -672,4 +464,5 @@ if __name__ == "__main__":
         #X_train, Y_train = multi.split_gauss_data(X_test, Y_test)
         #print(np.asmatrix(x_train).shape)
         multi.two_layer_train_test_network(np.asmatrix(x_train), np.asmatrix(x_test), np.asmatrix(sin_train), np.asmatrix(sin_test))
+        multi.two_layer_train_test_network(np.asmatrix(x_train), np.asmatrix(x_test), np.asmatrix(square_train), np.asmatrix(square_test))
         #X, Y = multi.generate_3d_gauss()

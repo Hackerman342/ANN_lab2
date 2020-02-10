@@ -18,7 +18,7 @@ def transform_RBF_square(values):
     return [1 if i > 0 else -1 for i in values]
 
 
-def RBF_NN(n_nodes, sin_or_square="sin", std = 1, tranf_test=False, rand_std=False, plot_train=False, plot_test=True, verbose=True):
+def RBF_NN(n_nodes, sin_or_square="sin", std = 1, tranf_test=False, rand_std=False, plot_train=False, plot_test=True, verbose=True, plot_mu_rbf=True):
         
     # Initialize class w/ node count
     rbf = RadialBasisFunctions(n_nodes)
@@ -31,10 +31,7 @@ def RBF_NN(n_nodes, sin_or_square="sin", std = 1, tranf_test=False, rand_std=Fal
     test_range = [0.05 , 2*math.pi + 0.05]
     step = 0.1
     
-    #tranform RBF output to square
-    tranf_train = False
-    tranf_test = False
-    
+
     # Call functions to generate train and test dataseta
     x_train, sin_train, square_train = rbf.generate_sin_and_square(train_range,step)
     x_test, sin_test, square_test = rbf.generate_sin_and_square(test_range,step)
@@ -48,8 +45,10 @@ def RBF_NN(n_nodes, sin_or_square="sin", std = 1, tranf_test=False, rand_std=Fal
         
     # Set parameters RBF 
     mu_range = [0, round(2*math.pi,1)]
+    #mu_range = [-5, 5]
     mu_RBF = np.linspace(mu_range[0], mu_range[1], rbf.node_count) #rows=number of RBF nodes, cols=number of dimensions
-    
+    #mu_RBF = np.random.normal(size=rbf.node_count)
+
     
     mu_RBF = mu_RBF.reshape(len(mu_RBF),-1)
     # reshape to have rows = n_training samples and cols= n_dimensions
@@ -66,11 +65,6 @@ def RBF_NN(n_nodes, sin_or_square="sin", std = 1, tranf_test=False, rand_std=Fal
     fhat_train = np.dot(phi_train, w)
     fhat_test = np.dot(phi_test, w)
     
-    if tranf_train:
-        fhat_train = transform_RBF_square(fhat_train)
-    if tranf_test:
-        fhat_test = transform_RBF_square(fhat_test)
-        
     
     ARE_train = rbf.ARE(f_train, fhat_train)
     ARE_test = rbf.ARE(f_test, fhat_test)
@@ -92,6 +86,8 @@ def RBF_NN(n_nodes, sin_or_square="sin", std = 1, tranf_test=False, rand_std=Fal
     if plot_test:
         plt.plot(x_test,f_test,'k',label='Real')
         plt.plot(x_test,fhat_test, '--c', label='Predicted')
+        if plot_mu_rbf:
+            plt.scatter(mu_RBF.reshape(-1,), np.zeros(len(mu_RBF)), marker="x", c="r", label="RBF centers")
         plt.legend()
         text_title = str(n_nodes) + " hidden nodes over test data"
         plt.title(text_title)
@@ -100,6 +96,5 @@ def RBF_NN(n_nodes, sin_or_square="sin", std = 1, tranf_test=False, rand_std=Fal
     return ARE_test
 
 if __name__ == "__main__":
-    RBF_NN(6, sin_or_square="sin", std = 1, tranf_test=False, rand_std=False, plot_train=True)
-    
+    RBF_NN(50, sin_or_square="square", std = 0.08, tranf_test=False, rand_std=False, plot_train=True)
     
