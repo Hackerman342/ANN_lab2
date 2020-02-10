@@ -289,7 +289,7 @@ if __name__ == "__main__":
     epochs_CL=100000
     epochs_NN=100000
     #plt.scatter(mu_vec, np.zeros(len(mu_vec)))
-    mu = get_results_with_CL_op2(rbf, epochs_CL, x_train, x_test, f_train, f_test, mu_vec, std, epochs_NN, plot_results=False, n_winning_unities=3)
+    mu = get_results_with_CL_op2(rbf, epochs_CL, x_train, x_test, f_train, f_test, mu_vec, std, epochs_NN, plot_results=False, n_winning_unities=1)
     #train_RBF_network_op2(n_hidden_nodes, use_cl, std, plot_results=True, normalize_training_data=False, n_iterations_CL=10001)
     plt.scatter(mu[:, 0], np.zeros(len(mu)))
     #plt.scatter(np.linspace(0, 2*np.pi, 11), np.zeros(11))
